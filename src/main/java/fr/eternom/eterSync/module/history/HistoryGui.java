@@ -1,10 +1,10 @@
 package fr.eternom.eterSync.module.history;
 
 import fr.eternom.eterLib.helper.message.Messages;
+import fr.eternom.eterLib.helper.task.Tasks;
 import fr.eternom.eterLib.module.player.PlayerDirectory;
 import fr.eternom.eterSync.module.sync.SnapshotRepository.Entry;
 import fr.eternom.eterSync.module.sync.SyncService;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 
 /**
  * Historique des sauvegardes d'un joueur, en LECTURE SEULE (admins) : liste et aperçu de l'inventaire.
@@ -68,21 +67,7 @@ public class HistoryGui {
     }
 
     private <T> void async(Player player, Supplier<T> task, Consumer<T> then) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            T result;
-            try {
-                result = task.get();
-            } catch (RuntimeException e) {
-                plugin.getLogger().log(Level.SEVERE, "Erreur dans l'historique de synchronisation", e);
-                Bukkit.getScheduler().runTask(plugin, () -> messages.send(player, "sync.error-generic"));
-                return;
-            }
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (player.isOnline()) {
-                    then.accept(result);
-                }
-            });
-        });
+        Tasks.async(plugin, player, task, then, () -> messages.send(player, "sync.error-generic"));
     }
 
     private record Target(UUID uuid, String name, List<Entry> entries) {

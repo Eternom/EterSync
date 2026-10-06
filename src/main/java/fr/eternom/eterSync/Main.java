@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 public final class Main extends JavaPlugin {
 
     /** Version minimale d'EterLib : les méthodes utilisées par ce plugin n'existent pas avant. */
-    private static final String REQUIRED_ETERLIB = "1.1.0";
+    private static final String REQUIRED_ETERLIB = "1.3.0";
 
     /** Préfixe des tables d'EterSync dans la base commune : etersync_snapshots. */
     private static final String TABLE_PREFIX = "etersync_";
@@ -32,13 +32,17 @@ public final class Main extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        EterLib lib = EterLib.get();
-        if (!isAtLeast(lib.getPluginMeta().getVersion(), REQUIRED_ETERLIB)) {
-            getLogger().severe("EterSync nécessite EterLib " + REQUIRED_ETERLIB + " ou plus récent (installé : "
-                    + lib.getPluginMeta().getVersion() + "). Plugin désactivé.");
-            Bukkit.getPluginManager().disablePlugin(this);
+        // En premier : vérifie la version d'EterLib (un EterLib < 1.3.0 n'a pas requireVersion, d'où le catch)
+        try {
+            if (!EterLib.requireVersion(this, REQUIRED_ETERLIB)) {
+                return;
+            }
+        } catch (LinkageError tooOld) {
+            getLogger().severe("EterLib " + REQUIRED_ETERLIB + " ou plus récent est nécessaire.");
+            getServer().getPluginManager().disablePlugin(this);
             return;
         }
+        EterLib lib = EterLib.get();
         messages = lib.messages(this, "en_us", "fr_fr");
 
         // Sans Redis, impossible de savoir si l'ancien serveur a fini d'enregistrer : risque de perte ou de duplication
@@ -86,19 +90,5 @@ public final class Main extends JavaPlugin {
 
     public HistoryGui getHistory() {
         return history;
-    }
-
-    /** "1.2.0" >= "1.1.2" : compare les nombres un à un (un suffixe comme -SNAPSHOT est ignoré). */
-    private static boolean isAtLeast(String version, String minimum) {
-        String[] actual = version.split("[.-]");
-        String[] wanted = minimum.split("[.-]");
-        for (int i = 0; i < wanted.length; i++) {
-            int a = i < actual.length && actual[i].matches("\\d+") ? Integer.parseInt(actual[i]) : 0;
-            int w = Integer.parseInt(wanted[i]);
-            if (a != w) {
-                return a > w;
-            }
-        }
-        return true;
     }
 }

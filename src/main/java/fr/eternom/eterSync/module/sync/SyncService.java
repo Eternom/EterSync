@@ -209,10 +209,6 @@ public class SyncService {
         }
     }
 
-    public boolean isSynced(UUID player) {
-        return synced.contains(player);
-    }
-
     public String getGroup() {
         return group;
     }

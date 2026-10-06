@@ -6,7 +6,7 @@ Document développeur, à tenir à jour avec le code.
 
 ## Prérequis
 
-- **EterLib 1.1.1+** (`depend`), avec **Redis activé** (`cache.enabled: true`) : sans Redis, EterSync se désactive.
+- **EterLib 1.1.2+** (`depend`), avec **Redis activé** (`cache.enabled: true`) : sans Redis, EterSync se désactive.
 - Même base de données et même Redis pour tous les serveurs du groupe.
 
 ## Fonctionnement

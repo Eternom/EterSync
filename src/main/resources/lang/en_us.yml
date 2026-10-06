@@ -3,8 +3,7 @@
 #   <info> = normal light gray text, <accent> = important words in orange.
 # Values between <> such as <player> are filled in by the plugin. To show a literal "<", write \< inside 'single quotes'.
 # A missing key falls back to the plugin's built-in text: you only need to keep the lines you change.
-
-prefix: "<gradient:#FF7A00:#FFB347><bold>EterSync</bold></gradient> <dark_gray>» "
+# The message prefix ("Core") is shared by all plugins: EterLib/config.yml > language.prefix.
 
 command:
   players-only: "<error>This command can only be used by players."

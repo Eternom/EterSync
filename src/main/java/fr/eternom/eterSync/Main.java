@@ -17,8 +17,8 @@ import java.util.regex.Pattern;
 
 public final class Main extends JavaPlugin {
 
-    /** Version minimale d'EterLib : les méthodes utilisées par ce plugin n'existent pas avant. */
-    private static final String REQUIRED_ETERLIB = "1.3.0";
+    /** Version minimale d'EterLib : préfixe commun des messages (language.prefix) depuis 1.5.0. */
+    private static final String REQUIRED_ETERLIB = "1.5.0";
 
     /** Préfixe des tables d'EterSync dans la base commune : etersync_snapshots. */
     private static final String TABLE_PREFIX = "etersync_";

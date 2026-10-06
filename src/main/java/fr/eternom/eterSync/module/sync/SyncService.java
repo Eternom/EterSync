@@ -209,22 +209,6 @@ public class SyncService {
         }
     }
 
-    /**
-     * Restaure une sauvegarde de l'historique : elle devient la plus récente. Joueur hors ligne : appliquée à sa
-     * prochaine connexion. Joueur sur CE serveur : appliquée tout de suite. Thread principal.
-     * @return false si le joueur est connecté sur un autre serveur (il faut le restaurer depuis là-bas)
-     */
-    public boolean restore(UUID player, PlayerSnapshot snapshot, boolean onlineElsewhere) {
-        Player online = Bukkit.getPlayer(player);
-        if (online != null && synced.contains(player)) {
-            snapshot.apply(online);
-        } else if (onlineElsewhere) {
-            return false;
-        }
-        write(() -> save(player, Reason.RESTORE, snapshot));
-        return true;
-    }
-
     public boolean isSynced(UUID player) {
         return synced.contains(player);
     }

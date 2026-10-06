@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.Locale;
 
-/** /etersync history <joueur> : historique des sauvegardes, aperçu et restauration (admin). */
+/** /etersync history <joueur> : historique des sauvegardes et aperçu, en lecture seule (admin). */
 public class HistoryCommand implements TabExecutor {
 
     private final HistoryGui gui;

@@ -26,12 +26,12 @@ Garde-fous :
 - sauvegarde automatique (`autosave-minutes`) et à l'arrêt du serveur ;
 - si la base est injoignable, la sauvegarde est écrite dans `plugins/EterSync/failed/` (jamais perdue).
 
-## Historique
+## Historique (lecture seule)
 
 Table `etersync_snapshots` : une **ligne par sauvegarde** (jamais de mise à jour), les `history-size` plus récentes
-gardées par joueur et par groupe. `/etersync history <joueur>` (`etersync.admin`) : liste, aperçu de l'inventaire,
-restauration avec confirmation (joueur hors ligne : appliquée à sa prochaine connexion ; sur ce serveur : tout de suite ;
-sur un autre serveur : à faire depuis là-bas).
+gardées par joueur et par groupe. `/etersync history <joueur>` (`etersync.admin`, op par défaut) : liste et aperçu de
+l'inventaire et de l'état, **sans restauration** : un joueur pourrait donner ses items puis demander à les récupérer
+(duplication). Les clics dans l'aperçu sont annulés, aucun item ne peut en sortir.
 
 Format : `PlayerSnapshot#toBytes` (version de format en tête), items via `ItemStack.serializeItemsAsBytes` de Paper,
 mis à jour automatiquement lors des montées de version de Minecraft.

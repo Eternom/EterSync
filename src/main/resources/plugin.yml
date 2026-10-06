@@ -10,11 +10,11 @@ depend: [EterLib]
 
 commands:
   etersync:
-    description: Historique des sauvegardes d'un joueur (aperçu, restauration).
+    description: Historique des sauvegardes d'un joueur (aperçu, lecture seule).
     usage: /etersync history <joueur>
     permission: etersync.admin
 
 permissions:
   etersync.admin:
-    description: Voir et restaurer les sauvegardes des joueurs.
+    description: Voir l'historique des sauvegardes des joueurs.
     default: op

@@ -25,19 +25,16 @@ history:
     latest: "<accent><date></accent> <success>(actuelle)"
     server: "<dark_gray>▸ <info>Serveur : <accent><server>"
     reason: "<dark_gray>▸ <info>Enregistrée à : <accent><reason>"
-    preview: "<accent>Clic gauche <dark_gray>· <info>aperçu"
-    restore: "<accent>Clic droit <dark_gray>· <info>restaurer"
+    preview: "<accent>Clic <dark_gray>· <info>aperçu (lecture seule)"
   reason:
     first: "la première connexion"
     quit: "la déconnexion / un changement de serveur"
     autosave: "la sauvegarde automatique"
     shutdown: "l'arrêt du serveur"
-    restore: "une restauration"
 
 preview:
   title: "<primary><player></primary> <dark_gray>· <date>"
   back: "<accent>« Retour"
-  restore: "<accent>Restaurer cette sauvegarde"
   info:
     title: "<accent>État du joueur"
     health: "<dark_gray>▸ <info>Vie : <accent><value>"
@@ -46,11 +43,3 @@ preview:
     gamemode: "<dark_gray>▸ <info>Mode de jeu : <accent><value>"
     effects: "<dark_gray>▸ <info>Effets : <accent><value>"
     items: "<dark_gray>▸ <info>Piles d'items : <accent><value>"
-
-restore:
-  title: "<primary>Restaurer une sauvegarde"
-  body: "Restaurer la sauvegarde de <player> du <date> ? Elle remplace son inventaire et son état actuels."
-  confirm: "<error>Restaurer"
-  cancel: "Annuler"
-  done: "<info>Sauvegarde du <accent><date></accent> restaurée pour <accent><player></accent>."
-  elsewhere: "<error><accent><player></accent> est connecté sur un autre serveur : restaure depuis ce serveur, ou quand il sera déconnecté."

@@ -49,7 +49,7 @@ public final class Main extends JavaPlugin {
         SnapshotRepository repository = new SnapshotRepository(lib.database(TABLE_PREFIX), getConfig().getInt("history-size", 10));
         sync = new SyncService(this, repository, redis, messages, group, lib.getServerName(),
                 Duration.ofSeconds(Math.max(1, getConfig().getInt("lock-wait", 10))));
-        history = new HistoryGui(this, sync, lib.getPlayers(), messages, lib.getServerName());
+        history = new HistoryGui(this, sync, lib.getPlayers(), messages);
 
         new Commands(this);
         new Events(this);

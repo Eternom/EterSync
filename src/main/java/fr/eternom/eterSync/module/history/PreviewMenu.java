@@ -15,17 +15,17 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Locale;
 
 /**
- * Aperçu d'une sauvegarde, en lecture seule (les clics sont annulés par EterLib) :
+ * Aperçu d'une sauvegarde, en lecture seule (les clics sont annulés par EterLib, aucun item ne peut être pris) :
  * <pre>
  *  ⛑ 👕 👖 👢 🛡 · · · ⓘ     armure, seconde main, infos (vie, faim, niveau, mode, effets)
  *  · · · · · · · · ·         rangées 1 à 3 : l'inventaire
  *  · · · · · · · · ·
  *  · · · · · · · · ·
  *  · · · · · · · · ·         rangée 4 : la barre d'action
- *  ◀ · · · · · · · ⟲         retour, restaurer
+ *  ◀ · · · · · · · ·         retour
  * </pre>
  */
 public class PreviewMenu implements Menu {
@@ -33,23 +33,18 @@ public class PreviewMenu implements Menu {
     private static final int OFFHAND = 4;
     private static final int INFO = 8;
     private static final int BACK = 45;
-    private static final int RESTORE = 53;
 
     private final HistoryGui gui;
     private final Messages messages;
     private final Player viewer;
-    private final UUID target;
     private final String targetName;
-    private final Entry entry;
     private final Inventory inventory;
 
-    PreviewMenu(HistoryGui gui, Player viewer, UUID target, String targetName, Entry entry, PlayerSnapshot snapshot) {
+    PreviewMenu(HistoryGui gui, Player viewer, String targetName, Entry entry, PlayerSnapshot snapshot) {
         this.gui = gui;
         this.messages = gui.messages();
         this.viewer = viewer;
-        this.target = target;
         this.targetName = targetName;
-        this.entry = entry;
         this.inventory = Bukkit.createInventory(this, 54,
                 messages.get(viewer, "preview.title", "player", targetName, "date", gui.date(entry)));
 
@@ -70,11 +65,10 @@ public class PreviewMenu implements Menu {
                 text("preview.info.health", "value", String.valueOf(Math.round(snapshot.health()))),
                 text("preview.info.food", "value", String.valueOf(snapshot.food())),
                 text("preview.info.level", "value", String.valueOf(snapshot.level())),
-                text("preview.info.gamemode", "value", snapshot.gameMode().name().toLowerCase()),
+                text("preview.info.gamemode", "value", snapshot.gameMode().name().toLowerCase(Locale.ROOT)),
                 text("preview.info.effects", "value", String.valueOf(snapshot.effects().size())),
                 text("preview.info.items", "value", String.valueOf(snapshot.itemCount())))));
         inventory.setItem(BACK, Items.item(Material.ARROW, text("preview.back"), List.of()));
-        inventory.setItem(RESTORE, Items.item(Material.RECOVERY_COMPASS, text("preview.restore"), List.of()));
     }
 
     @Override
@@ -82,9 +76,6 @@ public class PreviewMenu implements Menu {
         if (slot == BACK) {
             Sounds.click(player);
             gui.open(player, targetName);
-        } else if (slot == RESTORE) {
-            Sounds.click(player);
-            gui.confirmRestore(player, target, targetName, entry);
         }
     }
 

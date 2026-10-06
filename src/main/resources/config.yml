@@ -19,8 +19,8 @@
 # Minuscules, chiffres, _ et -.
 group: survival
 
-# Nombre de sauvegardes gardées par joueur et par groupe, consultables et
-# restaurables avec /etersync history <joueur>.
+# Nombre de sauvegardes gardées par joueur et par groupe, consultables (lecture
+# seule, pas de restauration) avec /etersync history <joueur>.
 history-size: 10
 
 # Sauvegarde automatique des joueurs connectés, en minutes (protège contre un plantage).

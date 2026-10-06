@@ -25,19 +25,16 @@ history:
     latest: "<accent><date></accent> <success>(current)"
     server: "<dark_gray>▸ <info>Server: <accent><server>"
     reason: "<dark_gray>▸ <info>Saved on: <accent><reason>"
-    preview: "<accent>Left click <dark_gray>· <info>preview"
-    restore: "<accent>Right click <dark_gray>· <info>restore"
+    preview: "<accent>Click <dark_gray>· <info>preview (read only)"
   reason:
     first: "first join"
     quit: "disconnect / server change"
     autosave: "automatic save"
     shutdown: "server shutdown"
-    restore: "restoration"
 
 preview:
   title: "<primary><player></primary> <dark_gray>· <date>"
   back: "<accent>« Back"
-  restore: "<accent>Restore this save"
   info:
     title: "<accent>Player state"
     health: "<dark_gray>▸ <info>Health: <accent><value>"
@@ -46,11 +43,3 @@ preview:
     gamemode: "<dark_gray>▸ <info>Game mode: <accent><value>"
     effects: "<dark_gray>▸ <info>Effects: <accent><value>"
     items: "<dark_gray>▸ <info>Item stacks: <accent><value>"
-
-restore:
-  title: "<primary>Restore a save"
-  body: "Restore the save of <player> from <date>? It replaces their current inventory and state."
-  confirm: "<error>Restore"
-  cancel: "Cancel"
-  done: "<info>Save from <accent><date></accent> restored for <accent><player></accent>."
-  elsewhere: "<error><accent><player></accent> is connected on another server: restore from that server, or once they are offline."

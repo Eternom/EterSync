@@ -19,9 +19,9 @@ public class SnapshotRepository {
     private static final String TABLE = "snapshots";
 
     /** Pourquoi la sauvegarde a été faite, affiché dans l'historique. */
-    public enum Reason { FIRST, QUIT, AUTOSAVE, SHUTDOWN, RESTORE }
+    public enum Reason { FIRST, QUIT, AUTOSAVE, SHUTDOWN }
 
-    /** Une sauvegarde, sans ses données (lues seulement si on l'ouvre ou la restaure). */
+    /** Une sauvegarde, sans ses données (lues seulement si on ouvre son aperçu). */
     public record Entry(long id, UUID player, String group, String server, Reason reason, long createdAt) {
     }
 

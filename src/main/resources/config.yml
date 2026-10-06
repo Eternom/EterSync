@@ -1,0 +1,32 @@
+# ============================================================
+#  EterSync
+# ============================================================
+#
+#  Synchronise entre les serveurs d'un même groupe : inventaire (armure et
+#  seconde main comprises), expérience, vie, faim, effets et mode de jeu.
+#  Pas le coffre de l'Ender (plugin dédié).
+#
+#  Redis est OBLIGATOIRE (EterLib/config.yml > cache.enabled: true) : il sert
+#  de verrou pour qu'un joueur ne soit jamais chargé sur un serveur avant que
+#  l'ancien ait fini d'enregistrer.
+#
+#  Un joueur qui n'a encore jamais été synchronisé garde son inventaire actuel,
+#  qui devient sa première sauvegarde : rien n'est jamais remis à zéro.
+#  Toute modification nécessite un redémarrage du serveur.
+
+# Groupe de ce serveur. Les serveurs du même groupe partagent l'inventaire ;
+# un serveur d'un autre groupe (ex : créatif) a des inventaires séparés.
+# Minuscules, chiffres, _ et -.
+group: survival
+
+# Nombre de sauvegardes gardées par joueur et par groupe, consultables et
+# restaurables avec /etersync history <joueur>.
+history-size: 10
+
+# Sauvegarde automatique des joueurs connectés, en minutes (protège contre un plantage).
+autosave-minutes: 5
+
+# Temps max, en secondes, pour attendre que l'ancien serveur ait fini d'enregistrer
+# quand un joueur arrive (il est figé pendant ce temps, en général une fraction de
+# seconde). Au-delà, il est renvoyé avec un message, sans que rien ne soit modifié.
+lock-wait: 10

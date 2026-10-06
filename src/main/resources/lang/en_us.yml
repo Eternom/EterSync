@@ -1,0 +1,56 @@
+# EterSync messages, MiniMessage format: https://docs.advntr.dev/minimessage/format
+# Palette tags (EterLib/config.yml > language.colors): <primary> <accent> <info> <error> <success>
+#   <info> = normal light gray text, <accent> = important words in orange.
+# Values between <> such as <player> are filled in by the plugin. To show a literal "<", write \< inside 'single quotes'.
+# A missing key falls back to the plugin's built-in text: you only need to keep the lines you change.
+
+prefix: "<gradient:#FF7A00:#FFB347><bold>EterSync</bold></gradient> <dark_gray>» "
+
+command:
+  players-only: "<error>This command can only be used by players."
+
+sync:
+  busy: "<error>Your data is still being saved on your previous server.\n<info>Please reconnect in a few seconds."
+  error: "<error>Your data could not be loaded.\n<info>Please reconnect; if it keeps happening, contact a staff member."
+  error-generic: "<error>Something went wrong, please try again later."
+
+history:
+  usage: '<error>Usage: <accent>/etersync history \<player>'
+  unknown-player: "<error>Unknown player: <accent><player></accent>."
+  empty: "<info><accent><player></accent> has no saved data in group <accent><group></accent> yet."
+  gone: "<error>This save no longer exists (older saves are removed automatically)."
+  title: "<primary>Saves of <player>"
+  entry:
+    name: "<accent><date>"
+    latest: "<accent><date></accent> <success>(current)"
+    server: "<dark_gray>▸ <info>Server: <accent><server>"
+    reason: "<dark_gray>▸ <info>Saved on: <accent><reason>"
+    preview: "<accent>Left click <dark_gray>· <info>preview"
+    restore: "<accent>Right click <dark_gray>· <info>restore"
+  reason:
+    first: "first join"
+    quit: "disconnect / server change"
+    autosave: "automatic save"
+    shutdown: "server shutdown"
+    restore: "restoration"
+
+preview:
+  title: "<primary><player></primary> <dark_gray>· <date>"
+  back: "<accent>« Back"
+  restore: "<accent>Restore this save"
+  info:
+    title: "<accent>Player state"
+    health: "<dark_gray>▸ <info>Health: <accent><value>"
+    food: "<dark_gray>▸ <info>Food: <accent><value>"
+    level: "<dark_gray>▸ <info>Level: <accent><value>"
+    gamemode: "<dark_gray>▸ <info>Game mode: <accent><value>"
+    effects: "<dark_gray>▸ <info>Effects: <accent><value>"
+    items: "<dark_gray>▸ <info>Item stacks: <accent><value>"
+
+restore:
+  title: "<primary>Restore a save"
+  body: "Restore the save of <player> from <date>? It replaces their current inventory and state."
+  confirm: "<error>Restore"
+  cancel: "Cancel"
+  done: "<info>Save from <accent><date></accent> restored for <accent><player></accent>."
+  elsewhere: "<error><accent><player></accent> is connected on another server: restore from that server, or once they are offline."

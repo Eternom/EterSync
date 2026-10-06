@@ -1,0 +1,20 @@
+name: EterSync
+version: '${version}'
+
+main: fr.eternom.eterSync.Main
+api-version: '26.2'
+load: POSTWORLD
+authors: [ NadTum ]
+description: Synchronise l'inventaire et l'état des joueurs entre les serveurs d'un même groupe.
+depend: [EterLib]
+
+commands:
+  etersync:
+    description: Historique des sauvegardes d'un joueur (aperçu, restauration).
+    usage: /etersync history <joueur>
+    permission: etersync.admin
+
+permissions:
+  etersync.admin:
+    description: Voir et restaurer les sauvegardes des joueurs.
+    default: op

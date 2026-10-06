@@ -1,0 +1,56 @@
+# Messages d'EterSync, format MiniMessage : https://docs.advntr.dev/minimessage/format
+# Balises de la palette (EterLib/config.yml > language.colors) : <primary> <accent> <info> <error> <success>
+#   <info> = texte courant gris clair, <accent> = mots importants en orange.
+# Les valeurs entre <> comme <player> sont remplies par le plugin. Pour afficher un "<", écrire \< entre 'guillemets simples'.
+# Une clé absente reprend le texte intégré au plugin : tu peux ne garder que les lignes que tu modifies.
+
+prefix: "<gradient:#FF7A00:#FFB347><bold>EterSync</bold></gradient> <dark_gray>» "
+
+command:
+  players-only: "<error>Commande réservée aux joueurs."
+
+sync:
+  busy: "<error>Tes données sont encore en cours d'enregistrement sur ton ancien serveur.\n<info>Reconnecte-toi dans quelques secondes."
+  error: "<error>Impossible de charger tes données.\n<info>Reconnecte-toi ; si ça se reproduit, contacte un membre du staff."
+  error-generic: "<error>Une erreur est survenue, réessaie plus tard."
+
+history:
+  usage: '<error>Utilisation : <accent>/etersync history \<joueur>'
+  unknown-player: "<error>Joueur inconnu : <accent><player></accent>."
+  empty: "<info><accent><player></accent> n'a encore aucune sauvegarde dans le groupe <accent><group></accent>."
+  gone: "<error>Cette sauvegarde n'existe plus (les plus anciennes sont supprimées automatiquement)."
+  title: "<primary>Sauvegardes de <player>"
+  entry:
+    name: "<accent><date>"
+    latest: "<accent><date></accent> <success>(actuelle)"
+    server: "<dark_gray>▸ <info>Serveur : <accent><server>"
+    reason: "<dark_gray>▸ <info>Enregistrée à : <accent><reason>"
+    preview: "<accent>Clic gauche <dark_gray>· <info>aperçu"
+    restore: "<accent>Clic droit <dark_gray>· <info>restaurer"
+  reason:
+    first: "la première connexion"
+    quit: "la déconnexion / un changement de serveur"
+    autosave: "la sauvegarde automatique"
+    shutdown: "l'arrêt du serveur"
+    restore: "une restauration"
+
+preview:
+  title: "<primary><player></primary> <dark_gray>· <date>"
+  back: "<accent>« Retour"
+  restore: "<accent>Restaurer cette sauvegarde"
+  info:
+    title: "<accent>État du joueur"
+    health: "<dark_gray>▸ <info>Vie : <accent><value>"
+    food: "<dark_gray>▸ <info>Faim : <accent><value>"
+    level: "<dark_gray>▸ <info>Niveau : <accent><value>"
+    gamemode: "<dark_gray>▸ <info>Mode de jeu : <accent><value>"
+    effects: "<dark_gray>▸ <info>Effets : <accent><value>"
+    items: "<dark_gray>▸ <info>Piles d'items : <accent><value>"
+
+restore:
+  title: "<primary>Restaurer une sauvegarde"
+  body: "Restaurer la sauvegarde de <player> du <date> ? Elle remplace son inventaire et son état actuels."
+  confirm: "<error>Restaurer"
+  cancel: "Annuler"
+  done: "<info>Sauvegarde du <accent><date></accent> restaurée pour <accent><player></accent>."
+  elsewhere: "<error><accent><player></accent> est connecté sur un autre serveur : restaure depuis ce serveur, ou quand il sera déconnecté."

@@ -17,6 +17,9 @@ import java.util.regex.Pattern;
 
 public final class Main extends JavaPlugin {
 
+    /** Version minimale d'EterLib : les méthodes utilisées par ce plugin n'existent pas avant. */
+    private static final String REQUIRED_ETERLIB = "1.1.0";
+
     /** Préfixe des tables d'EterSync dans la base commune : etersync_snapshots. */
     private static final String TABLE_PREFIX = "etersync_";
     private static final Pattern GROUP = Pattern.compile("[a-z0-9_-]{1,32}");
@@ -30,6 +33,12 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         EterLib lib = EterLib.get();
+        if (!isAtLeast(lib.getPluginMeta().getVersion(), REQUIRED_ETERLIB)) {
+            getLogger().severe("EterSync nécessite EterLib " + REQUIRED_ETERLIB + " ou plus récent (installé : "
+                    + lib.getPluginMeta().getVersion() + "). Plugin désactivé.");
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
         messages = lib.messages(this, "en_us", "fr_fr");
 
         // Sans Redis, impossible de savoir si l'ancien serveur a fini d'enregistrer : risque de perte ou de duplication
@@ -77,5 +86,19 @@ public final class Main extends JavaPlugin {
 
     public HistoryGui getHistory() {
         return history;
+    }
+
+    /** "1.2.0" >= "1.1.2" : compare les nombres un à un (un suffixe comme -SNAPSHOT est ignoré). */
+    private static boolean isAtLeast(String version, String minimum) {
+        String[] actual = version.split("[.-]");
+        String[] wanted = minimum.split("[.-]");
+        for (int i = 0; i < wanted.length; i++) {
+            int a = i < actual.length && actual[i].matches("\\d+") ? Integer.parseInt(actual[i]) : 0;
+            int w = Integer.parseInt(wanted[i]);
+            if (a != w) {
+                return a > w;
+            }
+        }
+        return true;
     }
 }

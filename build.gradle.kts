@@ -25,6 +25,8 @@ java {
 tasks {
     processResources {
         val props = mapOf("version" to version)
+        // Déclarée comme entrée : sinon le cache de Gradle réutilise un plugin.yml avec l'ancienne version
+        inputs.properties(props)
         filesMatching("plugin.yml") {
             expand(props)
         }

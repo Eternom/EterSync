@@ -9,7 +9,7 @@ Document développeur, à tenir à jour avec le code.
 
 ## Prérequis
 
-- **EterLib 1.5.0+** (`depend`, préfixe commun des messages), avec **Redis activé** (`cache.enabled: true`) : sans Redis, EterSync se désactive.
+- **EterLib 1.6.0+** (`depend`, textes communs), avec **Redis activé** (`cache.enabled: true`) : sans Redis, EterSync se désactive.
 - Même base de données et même Redis pour tous les serveurs du groupe.
 
 ## Fonctionnement

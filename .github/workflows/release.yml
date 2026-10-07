@@ -1,0 +1,45 @@
+# Publie le(s) jar(s) du plugin dans les Releases GitHub à chaque version taguée (ex : git tag 1.2.0 && git push origin 1.2.0).
+# Les lobbys créés par l'orchestrateur (EterVelocityLobby) téléchargent la dernière release de chaque plugin.
+# Le tag doit être exactement la version de gradle.properties : sinon la publication est refusée.
+name: Release
+
+on:
+  push:
+    tags: ['*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Le tag correspond à la version
+        run: |
+          version=$(grep '^version=' gradle.properties | cut -d= -f2 | tr -d '\r')
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME différent de la version $version (gradle.properties)" >&2
+            exit 1
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilation
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-configuration-cache
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/libs/*.jar
+            */build/libs/*.jar
+          fail_on_unmatched_files: false

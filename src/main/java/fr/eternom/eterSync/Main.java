@@ -17,8 +17,8 @@ import java.util.regex.Pattern;
 
 public final class Main extends JavaPlugin {
 
-    /** Version minimale d'EterLib : bouton Retour/Fermer des menus et durées lisibles depuis 1.5.1. */
-    private static final String REQUIRED_ETERLIB = "1.5.1";
+    /** Version minimale d'EterLib : textes communs et outils partagés (Frame, Money, NetworkBus) depuis 1.6.0. */
+    private static final String REQUIRED_ETERLIB = "1.6.0";
 
     /** Préfixe des tables d'EterSync dans la base commune : etersync_snapshots. */
     private static final String TABLE_PREFIX = "etersync_";

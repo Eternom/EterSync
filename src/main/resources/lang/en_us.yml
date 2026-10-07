@@ -4,9 +4,7 @@
 # Values between <> such as <player> are filled in by the plugin. To show a literal "<", write \< inside 'single quotes'.
 # A missing key falls back to the plugin's built-in text: you only need to keep the lines you change.
 # The message prefix ("Core") is shared by all plugins: EterLib/config.yml > language.prefix.
-
-command:
-  players-only: "<error>This command can only be used by players."
+# Shared texts ("Cancel", "Unknown player", "players only"...): in EterLib/lang/, for every plugin.
 
 sync:
   busy: "<error>Your data is still being saved on your previous server.\n<info>Please reconnect in a few seconds."

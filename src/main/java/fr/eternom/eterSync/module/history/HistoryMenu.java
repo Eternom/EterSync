@@ -1,5 +1,6 @@
 package fr.eternom.eterSync.module.history;
 
+import fr.eternom.eterLib.EterLib;
 import fr.eternom.eterLib.helper.gui.Items;
 import fr.eternom.eterLib.helper.gui.Menu;
 import fr.eternom.eterLib.helper.gui.Sounds;
@@ -20,6 +21,8 @@ import java.util.Locale;
 public class HistoryMenu implements Menu {
 
     private static final int SIZE = 54;
+    /** Dernier emplacement : retour (commande de la config) ou fermer. */
+    private static final int BACK = SIZE - 1;
 
     private final HistoryGui gui;
     private final Messages messages;
@@ -35,14 +38,17 @@ public class HistoryMenu implements Menu {
         this.targetName = targetName;
         this.entries = entries;
         this.inventory = Bukkit.createInventory(this, SIZE, messages.get(viewer, "history.title", "player", targetName));
-        for (int i = 0; i < entries.size() && i < SIZE; i++) {
+        for (int i = 0; i < entries.size() && i < BACK; i++) {
             inventory.setItem(i, entryItem(entries.get(i), i == 0));
         }
+        inventory.setItem(BACK, gui.backButton().item(viewer));
     }
 
     @Override
     public void onClick(Player player, int slot, ClickType click) {
-        if (slot < entries.size()) {
+        if (slot == BACK) {
+            gui.backButton().click(player);
+        } else if (slot < entries.size()) {
             Sounds.click(player);
             gui.preview(player, targetName, entries.get(slot));
         }
@@ -56,7 +62,7 @@ public class HistoryMenu implements Menu {
     /** latest : la sauvegarde qui fait foi, mise en avant (brillante). */
     private ItemStack entryItem(Entry entry, boolean latest) {
         List<Component> lore = List.of(
-                text("history.entry.server", "server", entry.server()),
+                text("history.entry.server", "server", EterLib.get().getServerDisplayName(entry.server())),
                 text("history.entry.reason", "reason",
                         messages.plain(viewer, "history.reason." + entry.reason().name().toLowerCase(Locale.ROOT))),
                 Component.empty(),

@@ -30,3 +30,9 @@ autosave-minutes: 5
 # quand un joueur arrive (il est figé pendant ce temps, en général une fraction de
 # seconde). Au-delà, il est renvoyé avec un message, sans que rien ne soit modifié.
 lock-wait: 10
+
+# Menus : bouton en bas du menu. Avec une commande (sans le /), il la lance pour le joueur et relie
+# les menus entre eux (ex : "profile" pour revenir au menu du profil) ; vide, il ferme le menu.
+menus:
+  history:
+    back-command: ""

@@ -1,5 +1,6 @@
 package fr.eternom.eterSync.module.history;
 
+import fr.eternom.eterLib.helper.gui.BackButton;
 import fr.eternom.eterLib.helper.message.Messages;
 import fr.eternom.eterLib.helper.task.Tasks;
 import fr.eternom.eterLib.module.player.PlayerDirectory;
@@ -29,12 +30,14 @@ public class HistoryGui {
     private final SyncService sync;
     private final PlayerDirectory players;
     private final Messages messages;
+    private final BackButton backButton;
 
-    public HistoryGui(JavaPlugin plugin, SyncService sync, PlayerDirectory players, Messages messages) {
+    public HistoryGui(JavaPlugin plugin, SyncService sync, PlayerDirectory players, Messages messages, BackButton backButton) {
         this.plugin = plugin;
         this.sync = sync;
         this.players = players;
         this.messages = messages;
+        this.backButton = backButton;
     }
 
     /** Cherche le joueur sur tout le réseau (eter_players) puis ouvre son historique dans le groupe de ce serveur. */
@@ -64,6 +67,10 @@ public class HistoryGui {
 
     Messages messages() {
         return messages;
+    }
+
+    BackButton backButton() {
+        return backButton;
     }
 
     private <T> void async(Player player, Supplier<T> task, Consumer<T> then) {

@@ -1,7 +1,10 @@
 # EterSync
 
 Synchronise l'état des joueurs entre les serveurs d'un même **groupe** : inventaire (armure et seconde main comprises),
-slot en main, expérience, vie, faim, effets et mode de jeu. Pas le coffre de l'Ender (plugin dédié à venir).
+slot en main, expérience, vie, faim, effets, mode de jeu, **progrès et recettes débloquées** (sinon chaque serveur
+redécouvre tout : pluie de notifications à chaque changement ; ils ne font que s'ajouter, sans annonce dans le chat ;
+les progrès `recipes/...` se refont seuls). Format 2 des sauvegardes (le format 1 est encore lu, sans progrès) :
+**tous les serveurs d'un groupe doivent avoir la même version**. Pas le coffre de l'Ender (plugin dédié à venir).
 Document développeur, à tenir à jour avec le code.
 
 ## Prérequis

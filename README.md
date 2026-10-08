@@ -29,6 +29,13 @@ Garde-fous :
 - sauvegarde automatique (`autosave-minutes`) et à l'arrêt du serveur ;
 - si la base est injoignable, la sauvegarde est écrite dans `plugins/EterSync/failed/` (jamais perdue).
 
+## Succès désactivés (`disable-advancements`, oui par défaut)
+
+Chaque serveur a ses propres succès : les redonner à l'arrivée (synchronisation) fait rejouer au client toutes leurs
+notifications et leurs sons, ce que le serveur ne peut pas cacher. Au démarrage, `module/sync/Advancements` les retire
+donc du serveur (`UnsafeValues#removeAdvancement`), sauf les recettes (`recipes/...`, livre de recettes). Tant que c'est
+activé, les sauvegardes ne gardent plus de progression de succès.
+
 ## Historique (lecture seule)
 
 Table `etersync_snapshots` : une **ligne par sauvegarde** (jamais de mise à jour), les `history-size` plus récentes

@@ -19,6 +19,11 @@
 # Minuscules, chiffres, _ et -.
 group: survival
 
+# Succès (advancements) désactivés sur ce serveur : sinon, en changeant de serveur, ils sont redonnés et le jeu
+# rejoue toutes leurs notifications et leurs sons. Les recettes du livre de recettes restent.
+# Attention : tant qu'ils sont désactivés, la progression des succès n'est plus gardée dans les sauvegardes.
+disable-advancements: true
+
 # Nombre de sauvegardes gardées par joueur et par groupe, consultables (lecture
 # seule, pas de restauration) avec /etersync history <joueur>.
 history-size: 10

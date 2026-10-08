@@ -5,6 +5,7 @@ import fr.eternom.eterLib.helper.cache.RedisCache;
 import fr.eternom.eterLib.helper.message.Messages;
 import fr.eternom.eterSync.listeners.Commands;
 import fr.eternom.eterSync.listeners.Events;
+import fr.eternom.eterSync.module.sync.Advancements;
 import fr.eternom.eterSync.module.history.HistoryGui;
 import fr.eternom.eterSync.module.sync.SnapshotRepository;
 import fr.eternom.eterSync.module.sync.SyncService;
@@ -44,6 +45,9 @@ public final class Main extends JavaPlugin {
         }
         EterLib lib = EterLib.get();
         messages = lib.messages(this, "en_us", "fr_fr");
+        if (getConfig().getBoolean("disable-advancements", true)) {
+            Advancements.disable(getLogger());
+        }
 
         // Sans Redis, impossible de savoir si l'ancien serveur a fini d'enregistrer : risque de perte ou de duplication
         RedisCache redis = lib.getRedis();

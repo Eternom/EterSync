@@ -33,7 +33,9 @@ Garde-fous :
 
 Chaque serveur a ses propres succès : les redonner à l'arrivée (synchronisation) fait rejouer au client toutes leurs
 notifications et leurs sons, ce que le serveur ne peut pas cacher. Au démarrage, `module/sync/Advancements` les retire
-donc du serveur (`UnsafeValues#removeAdvancement`), sauf les recettes (`recipes/...`, livre de recettes). Tant que c'est
+donc du serveur (`UnsafeValues#removeAdvancement`), sauf les recettes (`recipes/...`, livre de recettes). Les recettes se débloquent aussi sans
+notification (`RecipeToastListener` : `PlayerRecipeDiscoverEvent#shouldShowNotification(false)`), sinon l'arrivée sur
+un serveur en affiche des dizaines. Tant que c'est
 activé, les sauvegardes ne gardent plus de progression de succès.
 
 ## Historique (lecture seule)

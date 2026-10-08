@@ -20,7 +20,8 @@
 group: survival
 
 # Succès (advancements) désactivés sur ce serveur : sinon, en changeant de serveur, ils sont redonnés et le jeu
-# rejoue toutes leurs notifications et leurs sons. Les recettes du livre de recettes restent.
+# rejoue toutes leurs notifications et leurs sons. Les recettes du livre de recettes restent, débloquées sans
+# notification « Nouvelles recettes ».
 # Attention : tant qu'ils sont désactivés, la progression des succès n'est plus gardée dans les sauvegardes.
 disable-advancements: true
 

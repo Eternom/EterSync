@@ -8,9 +8,7 @@ public class Events {
 
     public Events(Main main) {
         main.getServer().getPluginManager().registerEvents(new SyncListener(main.getSync()), main);
-        if (main.getConfig().getBoolean("disable-advancements", true)) {
-            main.getServer().getPluginManager().registerEvents(new RecipeToastListener(), main);
-        }
+        main.getServer().getPluginManager().registerEvents(new RecipeToastListener(), main);
     }
 
 }

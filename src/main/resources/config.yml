@@ -3,12 +3,12 @@
 # ============================================================
 #
 #  Synchronise entre les serveurs d'un même groupe : inventaire (armure et
-#  seconde main comprises), expérience, vie, faim, effets et mode de jeu.
-#  Pas le coffre de l'Ender (plugin dédié).
+#  seconde main comprises), expérience, vie, faim, effets, mode de jeu et recettes.
+#  Pas le coffre de l'Ender (plugin dédié). Les succès de Minecraft sont désactivés :
+#  redonnés sur chaque serveur, ils rejouaient toutes leurs notifications.
 #
-#  Redis est OBLIGATOIRE (EterLib/config.yml > cache.enabled: true) : il sert
-#  de verrou pour qu'un joueur ne soit jamais chargé sur un serveur avant que
-#  l'ancien ait fini d'enregistrer.
+#  Redis (obligatoire, réglé dans EterLib/config.yml) sert de verrou : un joueur
+#  n'est jamais chargé sur un serveur avant que l'ancien ait fini d'enregistrer.
 #
 #  Un joueur qui n'a encore jamais été synchronisé garde son inventaire actuel,
 #  qui devient sa première sauvegarde : rien n'est jamais remis à zéro.
@@ -18,12 +18,6 @@
 # un serveur d'un autre groupe (ex : créatif) a des inventaires séparés.
 # Minuscules, chiffres, _ et -.
 group: survival
-
-# Succès (advancements) désactivés sur ce serveur : sinon, en changeant de serveur, ils sont redonnés et le jeu
-# rejoue toutes leurs notifications et leurs sons. Les recettes du livre de recettes restent, débloquées sans
-# notification « Nouvelles recettes ».
-# Attention : tant qu'ils sont désactivés, la progression des succès n'est plus gardée dans les sauvegardes.
-disable-advancements: true
 
 # Nombre de sauvegardes gardées par joueur et par groupe, consultables (lecture
 # seule, pas de restauration) avec /etersync history <joueur>.

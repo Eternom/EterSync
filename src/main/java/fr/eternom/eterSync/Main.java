@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 public final class Main extends JavaPlugin {
 
     /** Version minimale d'EterLib : textes communs et outils partagés (Frame, Money, NetworkBus) depuis 1.6.0. */
-    private static final String REQUIRED_ETERLIB = "1.6.0";
+    private static final String REQUIRED_ETERLIB = "1.8.0";
 
     /** Préfixe des tables d'EterSync dans la base commune : etersync_snapshots. */
     private static final String TABLE_PREFIX = "etersync_";
@@ -45,17 +45,10 @@ public final class Main extends JavaPlugin {
         }
         EterLib lib = EterLib.get();
         messages = lib.messages(this, "en_us", "fr_fr");
-        if (getConfig().getBoolean("disable-advancements", true)) {
-            Advancements.disable(getLogger());
-        }
+        Advancements.disable(getLogger());
 
-        // Sans Redis, impossible de savoir si l'ancien serveur a fini d'enregistrer : risque de perte ou de duplication
+        // Redis (obligatoire, via EterLib) sert de verrou : un joueur n'est chargé qu'une fois l'ancien serveur enregistré
         RedisCache redis = lib.getRedis();
-        if (redis == null) {
-            getLogger().severe("Redis est obligatoire pour EterSync : active cache.enabled dans EterLib/config.yml. Plugin désactivé.");
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
-        }
         String group = getConfig().getString("group", "default").toLowerCase(Locale.ROOT);
         if (!GROUP.matcher(group).matches()) {
             getLogger().severe("'group' invalide dans config.yml : \"" + group + "\" (minuscules, chiffres, _ et -). Plugin désactivé.");

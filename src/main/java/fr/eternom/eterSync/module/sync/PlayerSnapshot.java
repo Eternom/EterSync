@@ -1,13 +1,8 @@
 package fr.eternom.eterSync.module.sync;
 
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.GameRules;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
-import org.bukkit.World;
-import org.bukkit.advancement.Advancement;
-import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
@@ -22,31 +17,26 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
  * Photo de tout ce qui est synchronisé : inventaire (avec armure et seconde main), slot en main,
- * expérience, vie, faim, effets, mode de jeu, progrès et recettes débloquées. Pas le coffre de l'Ender (plugin dédié).
- *
- * Progrès et recettes : sans eux, chaque serveur redécouvre tout et le joueur reçoit une pluie de notifications
- * (« Nouvelles recettes », progrès) à chaque changement de serveur. Ils ne font que s'ajouter (rien n'est retiré) ;
- * les progrès « recipes/... » ne sont pas gardés : ils se refont seuls, en silence, une fois les recettes connues.
+ * expérience, vie, faim, effets, mode de jeu et recettes débloquées. Pas le coffre de l'Ender (plugin dédié), ni les
+ * succès (désactivés sur le réseau, voir Advancements). Les recettes ne font que s'ajouter (rien n'est retiré),
+ * débloquées sans notification (RecipeToastListener).
  *
  * Les items passent par le format de Paper (serializeItemsAsBytes), qui suit les mises à jour de Minecraft :
  * un inventaire enregistré aujourd'hui reste lisible après une montée de version du serveur.
  */
 public record PlayerSnapshot(ItemStack[] inventory, int heldSlot, GameMode gameMode, double health, int food,
                              float saturation, float exhaustion, int level, float exp, int totalExperience,
-                             List<PotionEffect> effects, Map<String, List<String>> advancements, List<String> recipes) {
+                             List<PotionEffect> effects, List<String> recipes) {
 
     /** Version du format binaire, à incrémenter si on ajoute un champ. */
     private static final int FORMAT = 2;
-    /** Format 1 (avant les progrès et les recettes) : encore lu, sans eux. */
-    private static final int FORMAT_WITHOUT_PROGRESS = 1;
+    /** Format 1 (avant les recettes) : encore lu, sans elles. */
+    private static final int FORMAT_WITHOUT_RECIPES = 1;
 
     /** Thread principal : lit l'état du joueur. */
     public static PlayerSnapshot capture(Player player) {
@@ -54,7 +44,7 @@ public record PlayerSnapshot(ItemStack[] inventory, int heldSlot, GameMode gameM
         ItemStack[] copy = Arrays.stream(contents).map(item -> item == null ? null : item.clone()).toArray(ItemStack[]::new);
         return new PlayerSnapshot(copy, player.getInventory().getHeldItemSlot(), player.getGameMode(), player.getHealth(),
                 player.getFoodLevel(), player.getSaturation(), player.getExhaustion(), player.getLevel(), player.getExp(),
-                player.getTotalExperience(), List.copyOf(player.getActivePotionEffects()), advancements(player),
+                player.getTotalExperience(), List.copyOf(player.getActivePotionEffects()),
                 player.getDiscoveredRecipes().stream().map(NamespacedKey::toString).toList());
     }
 
@@ -83,42 +73,6 @@ public record PlayerSnapshot(ItemStack[] inventory, int heldSlot, GameMode gameM
 
         player.discoverRecipes(recipes.stream().map(NamespacedKey::fromString).filter(Objects::nonNull)
                 .filter(key -> !player.hasDiscoveredRecipe(key)).toList());
-        awardAdvancements(player);
-    }
-
-    /** Progrès faits (critères obtenus), sauf ceux qui débloquent des recettes. */
-    private static Map<String, List<String>> advancements(Player player) {
-        Map<String, List<String>> done = new HashMap<>();
-        Bukkit.advancementIterator().forEachRemaining(advancement -> {
-            if (advancement.getKey().getKey().startsWith("recipes/")) {
-                return;
-            }
-            Collection<String> awarded = player.getAdvancementProgress(advancement).getAwardedCriteria();
-            if (!awarded.isEmpty()) {
-                done.put(advancement.getKey().toString(), List.copyOf(awarded));
-            }
-        });
-        return done;
-    }
-
-    /** Ajoute les critères manquants, sans annonce dans le chat (la règle est rétablie juste après). */
-    private void awardAdvancements(Player player) {
-        World world = player.getWorld();
-        Boolean announce = world.getGameRuleValue(GameRules.SHOW_ADVANCEMENT_MESSAGES);
-        world.setGameRule(GameRules.SHOW_ADVANCEMENT_MESSAGES, false);
-        try {
-            advancements.forEach((key, criteria) -> {
-                NamespacedKey namespacedKey = NamespacedKey.fromString(key);
-                Advancement advancement = namespacedKey == null ? null : Bukkit.getAdvancement(namespacedKey);
-                if (advancement == null) {
-                    return; // progrès retiré du jeu
-                }
-                AdvancementProgress progress = player.getAdvancementProgress(advancement);
-                criteria.stream().filter(progress.getRemainingCriteria()::contains).forEach(progress::awardCriteria);
-            });
-        } finally {
-            world.setGameRule(GameRules.SHOW_ADVANCEMENT_MESSAGES, announce == null || announce);
-        }
     }
 
     /** Nombre d'items (piles non vides), pour l'historique. */
@@ -157,14 +111,8 @@ public record PlayerSnapshot(ItemStack[] inventory, int heldSlot, GameMode gameM
             for (String recipe : recipes) {
                 out.writeUTF(recipe);
             }
-            out.writeInt(advancements.size());
-            for (Map.Entry<String, List<String>> advancement : advancements.entrySet()) {
-                out.writeUTF(advancement.getKey());
-                out.writeInt(advancement.getValue().size());
-                for (String criterion : advancement.getValue()) {
-                    out.writeUTF(criterion);
-                }
-            }
+            // Progression des succès (désactivés) : toujours vide, gardée pour que les serveurs pas encore à jour lisent ce format
+            out.writeInt(0);
             out.flush();
             return bytes.toByteArray();
         } catch (IOException e) {
@@ -175,7 +123,7 @@ public record PlayerSnapshot(ItemStack[] inventory, int heldSlot, GameMode gameM
     public static PlayerSnapshot fromBytes(byte[] data) {
         try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(data))) {
             int format = in.readInt();
-            if (format != FORMAT && format != FORMAT_WITHOUT_PROGRESS) {
+            if (format != FORMAT && format != FORMAT_WITHOUT_RECIPES) {
                 throw new IllegalStateException("Format de sauvegarde inconnu : " + format);
             }
             GameMode gameMode = GameMode.valueOf(in.readUTF());
@@ -208,26 +156,23 @@ public record PlayerSnapshot(ItemStack[] inventory, int heldSlot, GameMode gameM
             in.readFully(items);
 
             List<String> recipes = new ArrayList<>();
-            Map<String, List<String>> advancements = new HashMap<>();
-            if (format == FORMAT) {
+            if (format != FORMAT_WITHOUT_RECIPES) {
                 int recipeCount = in.readInt();
                 for (int i = 0; i < recipeCount; i++) {
                     recipes.add(in.readUTF());
                 }
+                // Puis la progression des succès (avant 1.0.8) : ignorée, les succès sont désactivés
                 int advancementCount = in.readInt();
                 for (int i = 0; i < advancementCount; i++) {
-                    String key = in.readUTF();
-                    List<String> criteria = new ArrayList<>();
+                    in.readUTF();
                     int criteriaCount = in.readInt();
                     for (int c = 0; c < criteriaCount; c++) {
-                        criteria.add(in.readUTF());
+                        in.readUTF();
                     }
-                    advancements.put(key, List.copyOf(criteria));
                 }
             }
             return new PlayerSnapshot(ItemStack.deserializeItemsFromBytes(items), heldSlot, gameMode, health, food,
-                    saturation, exhaustion, level, exp, totalExperience, List.copyOf(effects), Map.copyOf(advancements),
-                    List.copyOf(recipes));
+                    saturation, exhaustion, level, exp, totalExperience, List.copyOf(effects), List.copyOf(recipes));
         } catch (IOException e) {
             throw new IllegalStateException("Sauvegarde d'inventaire illisible", e);
         }

@@ -1,15 +1,15 @@
 # EterSync
 
 Synchronise l'état des joueurs entre les serveurs d'un même **groupe** : inventaire (armure et seconde main comprises),
-slot en main, expérience, vie, faim, effets, mode de jeu, **progrès et recettes débloquées** (sinon chaque serveur
-redécouvre tout : pluie de notifications à chaque changement ; ils ne font que s'ajouter, sans annonce dans le chat ;
-les progrès `recipes/...` se refont seuls). Format 2 des sauvegardes (le format 1 est encore lu, sans progrès) :
+slot en main, expérience, vie, faim, effets, mode de jeu et **recettes débloquées** (elles ne font que s'ajouter).
+Format 2 des sauvegardes (la partie « succès » est écrite vide et ignorée à la lecture ; le format 1, sans recettes, est
+encore lu) :
 **tous les serveurs d'un groupe doivent avoir la même version**. Pas le coffre de l'Ender (plugin dédié à venir).
 Document développeur, à tenir à jour avec le code.
 
 ## Prérequis
 
-- **EterLib 1.6.0+** (`depend`, textes communs), avec **Redis activé** (`cache.enabled: true`) : sans Redis, EterSync se désactive.
+- **EterLib 1.8.0+** (`depend`, textes communs), et donc **Redis** (obligatoire) : il sert de verrou.
 - Même base de données et même Redis pour tous les serveurs du groupe.
 
 ## Fonctionnement
@@ -29,14 +29,14 @@ Garde-fous :
 - sauvegarde automatique (`autosave-minutes`) et à l'arrêt du serveur ;
 - si la base est injoignable, la sauvegarde est écrite dans `plugins/EterSync/failed/` (jamais perdue).
 
-## Succès désactivés (`disable-advancements`, oui par défaut)
+## Succès désactivés (toujours)
 
 Chaque serveur a ses propres succès : les redonner à l'arrivée (synchronisation) fait rejouer au client toutes leurs
 notifications et leurs sons, ce que le serveur ne peut pas cacher. Au démarrage, `module/sync/Advancements` les retire
-donc du serveur (`UnsafeValues#removeAdvancement`), sauf les recettes (`recipes/...`, livre de recettes). Les recettes se débloquent aussi sans
+donc du serveur (`UnsafeValues#removeAdvancement`), sauf les recettes (`recipes/...`, livre de recettes). Les recettes se débloquent sans
 notification (`RecipeToastListener` : `PlayerRecipeDiscoverEvent#shouldShowNotification(false)`), sinon l'arrivée sur
-un serveur en affiche des dizaines. Tant que c'est
-activé, les sauvegardes ne gardent plus de progression de succès.
+un serveur en affiche des dizaines. Un plugin de succès propre au réseau (en base, sans notifications de Minecraft)
+les remplacera.
 
 ## Historique (lecture seule)
 

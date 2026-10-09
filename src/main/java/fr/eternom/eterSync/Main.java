@@ -10,6 +10,9 @@ import fr.eternom.eterSync.module.history.HistoryGui;
 import fr.eternom.eterSync.module.sync.SnapshotRepository;
 import fr.eternom.eterSync.module.sync.SyncService;
 import org.bukkit.Bukkit;
+import fr.eternom.eterSync.api.SyncApi;
+import fr.eternom.eterSync.module.sync.SyncApiService;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Duration;
@@ -19,7 +22,7 @@ import java.util.regex.Pattern;
 public final class Main extends JavaPlugin {
 
     /** Version minimale d'EterLib : textes communs et outils partagés (Frame, Money, NetworkBus) depuis 1.6.0. */
-    private static final String REQUIRED_ETERLIB = "1.8.0";
+    private static final String REQUIRED_ETERLIB = "1.10.0";
 
     /** Préfixe des tables d'EterSync dans la base commune : etersync_snapshots. */
     private static final String TABLE_PREFIX = "etersync_";
@@ -61,6 +64,9 @@ public final class Main extends JavaPlugin {
                 Duration.ofSeconds(Math.max(1, getConfig().getInt("lock-wait", 10))));
         history = new HistoryGui(this, sync, lib.getPlayers(), messages,
                 lib.backButton(getConfig().getString("menus.history.back-command", "")));
+
+        // API pour les autres plugins (SyncApi.get())
+        getServer().getServicesManager().register(SyncApi.class, new SyncApiService(sync, history), this, ServicePriority.Normal);
 
         new Commands(this);
         new Events(this);

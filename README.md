@@ -9,7 +9,7 @@ Document développeur, à tenir à jour avec le code.
 
 ## Prérequis
 
-- **EterLib 1.8.0+** (`depend`, textes communs), et donc **Redis** (obligatoire) : il sert de verrou.
+- **EterLib 1.10.0+** (`depend`, textes communs), et donc **Redis** (obligatoire) : il sert de verrou.
 - Même base de données et même Redis pour tous les serveurs du groupe.
 
 ## Fonctionnement
@@ -47,3 +47,13 @@ l'inventaire et de l'état, **sans restauration** : un joueur pourrait donner se
 
 Format : `PlayerSnapshot#toBytes` (version de format en tête), items via `ItemStack.serializeItemsAsBytes` de Paper,
 mis à jour automatiquement lors des montées de version de Minecraft.
+
+## API (pour les autres plugins)
+
+`fr.eternom.eterSync.api.SyncApi` (`SyncApi.get()`) : personne d'autre ne lit `etersync_snapshots`, et **personne
+d'autre n'écrit un inventaire** (sinon, duplication).
+
+- `isLoading(uuid)` : inventaire en cours de chargement, n'y touchez pas ;
+- `lastInventory(uuid)` : copie du dernier inventaire enregistré (41 cases), en lecture seule (bloquant) — c'est ce que
+  montrent `/invsee` d'EterEssential pour un joueur ailleurs et la fiche `/mod` ;
+- `openHistory(lecteur, pseudo)` : l'historique en lecture seule (`etersync.admin`).

@@ -14,6 +14,8 @@ before_install:
   # L'archive arrive parfois abîmée chez JitPack (jars illisibles : 1.10.0 à 1.10.2 ratées) : vérifiée par son SHA-256,
   # retéléchargée sinon
   - for i in 1 2 3 4 5; do curl -fsSL -o gradle-dist.zip https://services.gradle.org/distributions/gradle-9.7.1-bin.zip && echo "acd53f1edaf02f1a8ff99879f8a34b302661a057d9b063ae9e35b552f804d20a  gradle-dist.zip" | sha256sum -c - && break; echo "archive de Gradle abimee, nouvel essai"; sleep 5; done
-  - unzip -q -o gradle-dist.zip -d gradle-dist
+  # Décompressée dans un dossier unique (/tmp/eter-gradle.XXXXXX) : deux builds en même temps chez JitPack s'écrasaient
+  #   le même dossier (jars illisibles, agent introuvable)
+  - D=$(mktemp -d /tmp/eter-gradle.XXXXXX) && unzip -q gradle-dist.zip -d "$D" && echo "$D" > .eter-gradle-dir
 install:
-  - JAVA_HOME="$HOME/.sdkman/candidates/java/21.0.2-open" GRADLE_USER_HOME="$PWD/gradle-home" gradle-dist/gradle-9.7.1/bin/gradle publishToMavenLocal --no-daemon
+  - D=$(cat .eter-gradle-dir); for i in 1 2 3; do JAVA_HOME="$HOME/.sdkman/candidates/java/21.0.2-open" GRADLE_USER_HOME="$D/home" "$D/gradle-9.7.1/bin/gradle" publishToMavenLocal --no-daemon && break; echo "build rate, nouvel essai"; done

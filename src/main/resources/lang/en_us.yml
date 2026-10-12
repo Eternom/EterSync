@@ -33,6 +33,8 @@ history:
 preview:
   title: "<primary><player></primary> <dark_gray>· <date>"
   back: "<accent>« Back"
+  ender: "<accent>Ender chest"
+  inventory: "<accent>Inventory"
   info:
     title: "<accent>Player state"
     health: "<dark_gray>▸ <info>Health: <accent><value>"

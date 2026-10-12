@@ -32,6 +32,9 @@ public interface SyncApi {
      */
     Optional<ItemStack[]> lastInventory(UUID player);
 
+    /** Le dernier coffre de l'Ender enregistré (27 cases), copie en lecture seule ; vide s'il n'y en a pas. Bloquant (base). */
+    Optional<ItemStack[]> lastEnderChest(UUID player);
+
     /** L'historique des sauvegardes d'un joueur, en lecture seule (etersync.admin). Thread principal. */
     void openHistory(Player viewer, String targetName);
 }

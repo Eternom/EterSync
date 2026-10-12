@@ -25,22 +25,34 @@ import java.util.Locale;
  *  · · · · · · · · ·
  *  · · · · · · · · ·
  *  · · · · · · · · ·         rangée 4 : la barre d'action
- *  ◀ · · · · · · · ·         retour
+ *  ◀ · · · · · · · ▣         retour ; ▣ = coffre de l'Ender (ou retour à l'inventaire)
  * </pre>
+ * En mode coffre de l'Ender, les rangées 1 à 3 montrent ses 27 cases.
  */
 public class PreviewMenu implements Menu {
 
     private static final int OFFHAND = 4;
     private static final int INFO = 8;
     private static final int BACK = 45;
+    private static final int ENDER = 53;
 
     private final HistoryGui gui;
     private final Messages messages;
     private final Player viewer;
     private final String targetName;
+    private final Entry entry;
+    private final PlayerSnapshot snapshot;
+    private final boolean ender;
     private final Inventory inventory;
 
     PreviewMenu(HistoryGui gui, Player viewer, String targetName, Entry entry, PlayerSnapshot snapshot) {
+        this(gui, viewer, targetName, entry, snapshot, false);
+    }
+
+    private PreviewMenu(HistoryGui gui, Player viewer, String targetName, Entry entry, PlayerSnapshot snapshot, boolean ender) {
+        this.entry = entry;
+        this.snapshot = snapshot;
+        this.ender = ender;
         this.gui = gui;
         this.messages = gui.messages();
         this.viewer = viewer;
@@ -50,6 +62,16 @@ public class PreviewMenu implements Menu {
 
         // Contenu Paper : 0-8 barre d'action, 9-35 inventaire, 36-39 armure (bottes -> casque), 40 seconde main
         ItemStack[] items = snapshot.inventory();
+        if (ender) {
+            // Le coffre de l'Ender : 27 cases dans les rangées 1 à 3
+            ItemStack[] chest = snapshot.enderChest();
+            for (int i = 0; i < 27; i++) {
+                inventory.setItem(9 + i, item(chest, i));
+            }
+            inventory.setItem(ENDER, Items.item(Material.CHEST, text("preview.inventory"), List.of()));
+            inventory.setItem(BACK, Items.item(Material.ARROW, text("preview.back"), List.of()));
+            return;
+        }
         for (int i = 0; i < 4; i++) {
             inventory.setItem(i, item(items, 39 - i));
         }
@@ -68,6 +90,9 @@ public class PreviewMenu implements Menu {
                 text("preview.info.gamemode", "value", snapshot.gameMode().name().toLowerCase(Locale.ROOT)),
                 text("preview.info.effects", "value", String.valueOf(snapshot.effects().size())),
                 text("preview.info.items", "value", String.valueOf(snapshot.itemCount())))));
+        if (snapshot.enderChest() != null) {
+            inventory.setItem(ENDER, Items.item(Material.ENDER_CHEST, text("preview.ender"), List.of()));
+        }
         inventory.setItem(BACK, Items.item(Material.ARROW, text("preview.back"), List.of()));
     }
 
@@ -76,6 +101,9 @@ public class PreviewMenu implements Menu {
         if (slot == BACK) {
             Sounds.click(player);
             gui.open(player, targetName);
+        } else if (slot == ENDER && snapshot.enderChest() != null) {
+            Sounds.page(player);
+            player.openInventory(new PreviewMenu(gui, viewer, targetName, entry, snapshot, !ender).getInventory());
         }
     }
 

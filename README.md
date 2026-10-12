@@ -58,7 +58,7 @@ les remplacera.
 
 Table `etersync_snapshots` : une **ligne par sauvegarde** (jamais de mise à jour), les `history-size` plus récentes
 gardées par joueur et par groupe. `/etersync history <joueur>` (`etersync.admin`, op par défaut) : liste et aperçu de
-l'inventaire et de l'état, **sans restauration** : un joueur pourrait donner ses items puis demander à les récupérer
+l'inventaire, du coffre de l'Ender (bouton en bas à droite) et de l'état, **sans restauration** : un joueur pourrait donner ses items puis demander à les récupérer
 (duplication). Les clics dans l'aperçu sont annulés, aucun item ne peut en sortir.
 
 Format : `PlayerSnapshot#toBytes` (version de format en tête), items via `ItemStack.serializeItemsAsBytes` de Paper,
@@ -72,4 +72,6 @@ d'autre n'écrit un inventaire** (sinon, duplication).
 - `isLoading(uuid)` : inventaire en cours de chargement, n'y touchez pas ;
 - `lastInventory(uuid)` : copie du dernier inventaire enregistré (41 cases), en lecture seule (bloquant) — c'est ce que
   montrent `/invsee` d'EterEssential pour un joueur ailleurs et la fiche `/mod` ;
+- `lastEnderChest(uuid)` : copie du dernier coffre de l'Ender enregistré (27 cases), en lecture seule (bloquant) — c'est ce
+  que montre `/endersee` d'EterEssential pour un joueur ailleurs ;
 - `openHistory(lecteur, pseudo)` : l'historique en lecture seule (`etersync.admin`).

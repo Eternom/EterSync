@@ -33,6 +33,8 @@ history:
 preview:
   title: "<primary><player></primary> <dark_gray>· <date>"
   back: "<accent>« Retour"
+  ender: "<accent>Coffre de l'Ender"
+  inventory: "<accent>Inventaire"
   info:
     title: "<accent>État du joueur"
     health: "<dark_gray>▸ <info>Vie : <accent><value>"

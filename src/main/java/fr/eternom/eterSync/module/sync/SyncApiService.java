@@ -32,6 +32,13 @@ public class SyncApiService implements SyncApi {
     }
 
     @Override
+    public Optional<ItemStack[]> lastEnderChest(UUID player) {
+        return sync.getRepository().latest(player, sync.getGroup())
+                .filter(snapshot -> snapshot.enderChest() != null)
+                .map(snapshot -> Arrays.stream(snapshot.enderChest()).map(item -> item == null ? null : item.clone()).toArray(ItemStack[]::new));
+    }
+
+    @Override
     public void openHistory(Player viewer, String targetName) {
         history.open(viewer, targetName);
     }

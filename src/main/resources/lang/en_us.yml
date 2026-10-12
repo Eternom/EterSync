@@ -28,6 +28,7 @@ history:
     quit: "disconnect / server change"
     autosave: "automatic save"
     shutdown: "server shutdown"
+    ender_merge: "a server's ender chest merge"
 
 preview:
   title: "<primary><player></primary> <dark_gray>· <date>"

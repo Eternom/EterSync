@@ -28,6 +28,7 @@ history:
     quit: "la déconnexion / un changement de serveur"
     autosave: "la sauvegarde automatique"
     shutdown: "l'arrêt du serveur"
+    ender_merge: "la fusion du coffre de l'Ender d'un serveur"
 
 preview:
   title: "<primary><player></primary> <dark_gray>· <date>"

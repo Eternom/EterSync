@@ -17,12 +17,13 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
 /**
  * Photo de tout ce qui est synchronisé : inventaire (avec armure et seconde main), slot en main,
- * expérience, vie, faim, effets, mode de jeu et recettes débloquées. Pas le coffre de l'Ender (plugin dédié), ni les
+ * expérience, vie, faim, effets, mode de jeu, recettes débloquées et coffre de l'Ender. Pas les
  * succès (désactivés sur le réseau, voir Advancements). Les recettes ne font que s'ajouter (rien n'est retiré),
  * débloquées sans notification (RecipeToastListener).
  *
@@ -31,24 +32,35 @@ import java.util.Objects;
  */
 public record PlayerSnapshot(ItemStack[] inventory, int heldSlot, GameMode gameMode, double health, int food,
                              float saturation, float exhaustion, int level, float exp, int totalExperience,
-                             List<PotionEffect> effects, List<String> recipes) {
+                             List<PotionEffect> effects, List<String> recipes, ItemStack[] enderChest,
+                             List<String> enderServers) {
 
     /** Version du format binaire, à incrémenter si on ajoute un champ. */
-    private static final int FORMAT = 2;
+    private static final int FORMAT = 3;
+    /** Format 2 (avant le coffre de l'Ender) : encore lu, sans lui (enderChest null). */
+    private static final int FORMAT_WITHOUT_ENDER = 2;
     /** Format 1 (avant les recettes) : encore lu, sans elles. */
     private static final int FORMAT_WITHOUT_RECIPES = 1;
 
-    /** Thread principal : lit l'état du joueur. */
-    public static PlayerSnapshot capture(Player player) {
+    /**
+     * Thread principal : lit l'état du joueur. enderServers : serveurs dont le coffre de l'Ender local a déjà été versé
+     * dans le coffre synchronisé (voir SyncService), gardés dans la sauvegarde elle-même.
+     */
+    public static PlayerSnapshot capture(Player player, Collection<String> enderServers) {
         ItemStack[] contents = player.getInventory().getContents();
         ItemStack[] copy = Arrays.stream(contents).map(item -> item == null ? null : item.clone()).toArray(ItemStack[]::new);
         return new PlayerSnapshot(copy, player.getInventory().getHeldItemSlot(), player.getGameMode(), player.getHealth(),
                 player.getFoodLevel(), player.getSaturation(), player.getExhaustion(), player.getLevel(), player.getExp(),
                 player.getTotalExperience(), List.copyOf(player.getActivePotionEffects()),
-                player.getDiscoveredRecipes().stream().map(NamespacedKey::toString).toList());
+                player.getDiscoveredRecipes().stream().map(NamespacedKey::toString).toList(),
+                clone(player.getEnderChest().getContents()), List.copyOf(enderServers));
     }
 
-    /** Thread principal : remplace l'état du joueur par cette photo. */
+    static ItemStack[] clone(ItemStack[] items) {
+        return Arrays.stream(items).map(item -> item == null ? null : item.clone()).toArray(ItemStack[]::new);
+    }
+
+    /** Thread principal : remplace l'état du joueur par cette photo (sauf le coffre de l'Ender : SyncService). */
     public void apply(Player player) {
         player.getInventory().setContents(Arrays.copyOf(inventory, player.getInventory().getContents().length));
         player.getInventory().setHeldItemSlot(Math.clamp(heldSlot, 0, 8));
@@ -113,6 +125,19 @@ public record PlayerSnapshot(ItemStack[] inventory, int heldSlot, GameMode gameM
             }
             // Progression des succès (désactivés) : toujours vide, gardée pour que les serveurs pas encore à jour lisent ce format
             out.writeInt(0);
+
+            // Format 3 : coffre de l'Ender (-1 = inconnu) et serveurs dont le coffre local y a été versé
+            if (enderChest == null) {
+                out.writeInt(-1);
+            } else {
+                byte[] ender = ItemStack.serializeItemsAsBytes(enderChest);
+                out.writeInt(ender.length);
+                out.write(ender);
+            }
+            out.writeInt(enderServers.size());
+            for (String server : enderServers) {
+                out.writeUTF(server);
+            }
             out.flush();
             return bytes.toByteArray();
         } catch (IOException e) {
@@ -123,7 +148,7 @@ public record PlayerSnapshot(ItemStack[] inventory, int heldSlot, GameMode gameM
     public static PlayerSnapshot fromBytes(byte[] data) {
         try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(data))) {
             int format = in.readInt();
-            if (format != FORMAT && format != FORMAT_WITHOUT_RECIPES) {
+            if (format != FORMAT && format != FORMAT_WITHOUT_ENDER && format != FORMAT_WITHOUT_RECIPES) {
                 throw new IllegalStateException("Format de sauvegarde inconnu : " + format);
             }
             GameMode gameMode = GameMode.valueOf(in.readUTF());
@@ -171,8 +196,23 @@ public record PlayerSnapshot(ItemStack[] inventory, int heldSlot, GameMode gameM
                     }
                 }
             }
+            ItemStack[] enderChest = null;
+            List<String> enderServers = new ArrayList<>();
+            if (format == FORMAT) {
+                int enderLength = in.readInt();
+                if (enderLength >= 0) {
+                    byte[] ender = new byte[enderLength];
+                    in.readFully(ender);
+                    enderChest = ItemStack.deserializeItemsFromBytes(ender);
+                }
+                int serverCount = in.readInt();
+                for (int i = 0; i < serverCount; i++) {
+                    enderServers.add(in.readUTF());
+                }
+            }
             return new PlayerSnapshot(ItemStack.deserializeItemsFromBytes(items), heldSlot, gameMode, health, food,
-                    saturation, exhaustion, level, exp, totalExperience, List.copyOf(effects), List.copyOf(recipes));
+                    saturation, exhaustion, level, exp, totalExperience, List.copyOf(effects), List.copyOf(recipes), enderChest,
+                    List.copyOf(enderServers));
         } catch (IOException e) {
             throw new IllegalStateException("Sauvegarde d'inventaire illisible", e);
         }

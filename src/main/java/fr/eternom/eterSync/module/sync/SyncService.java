@@ -5,12 +5,17 @@ import fr.eternom.eterLib.helper.message.Messages;
 import fr.eternom.eterSync.module.sync.SnapshotRepository.Reason;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -56,6 +61,11 @@ public class SyncService {
     private final Set<UUID> loading = ConcurrentHashMap.newKeySet();
     /** Joueurs dont l'état est bien celui synchronisé : les seuls qu'on a le droit d'enregistrer. */
     private final Set<UUID> synced = ConcurrentHashMap.newKeySet();
+    /**
+     * Pour chaque joueur chargé : les serveurs dont le coffre de l'Ender local a déjà été versé dans le coffre synchronisé.
+     * Gardé DANS la sauvegarde (même écriture que le coffre) : jamais « versé » sans que le coffre versé soit enregistré.
+     */
+    private final Map<UUID, Set<String>> enderServers = new ConcurrentHashMap<>();
     /** Joueurs dont la sauvegarde de départ est en cours sur ce serveur. */
     private final Set<UUID> saving = ConcurrentHashMap.newKeySet();
     /**
@@ -107,11 +117,56 @@ public class SyncService {
         }
         if (snapshot.isPresent()) {
             snapshot.get().apply(player);
+            boolean merged = applyEnderChest(player, snapshot.get());
+            synced.add(uuid);
+            if (merged) {
+                // Le coffre local vient d'être versé : enregistré tout de suite, avec ce serveur dans la liste
+                PlayerSnapshot current = capture(player);
+                write(() -> save(uuid, Reason.ENDER_MERGE, current));
+            }
         } else {
-            PlayerSnapshot current = PlayerSnapshot.capture(player);
+            enderServers.put(uuid, new HashSet<>(Set.of(serverName)));
+            synced.add(uuid);
+            PlayerSnapshot current = capture(player);
             write(() -> save(uuid, Reason.FIRST, current));
         }
-        synced.add(uuid);
+    }
+
+    /**
+     * Coffre de l'Ender à l'arrivée. Chaque serveur avait jusqu'ici son propre coffre local : au premier passage d'un
+     * joueur sur un serveur, ce coffre local est VERSÉ dans le coffre synchronisé (rien n'est jamais vidé), et le serveur
+     * est noté dans la sauvegarde ; ensuite, le coffre synchronisé remplace le local. Ce qui ne rentre pas va dans
+     * l'inventaire, puis au sol. Une sauvegarde d'avant ce format (coffre inconnu) : le coffre local devient la référence.
+     * @return true si la sauvegarde doit être réécrite tout de suite (coffre versé ou devenu la référence)
+     */
+    private boolean applyEnderChest(Player player, PlayerSnapshot snapshot) {
+        Set<String> servers = new HashSet<>(snapshot.enderServers());
+        enderServers.put(player.getUniqueId(), servers);
+        Inventory chest = player.getEnderChest();
+        if (snapshot.enderChest() == null) {
+            servers.add(serverName);
+            return true;
+        }
+        if (servers.contains(serverName)) {
+            chest.setContents(Arrays.copyOf(PlayerSnapshot.clone(snapshot.enderChest()), chest.getSize()));
+            return false;
+        }
+        ItemStack[] local = PlayerSnapshot.clone(chest.getContents());
+        chest.setContents(Arrays.copyOf(PlayerSnapshot.clone(snapshot.enderChest()), chest.getSize()));
+        for (ItemStack item : local) {
+            if (item == null || item.isEmpty()) {
+                continue;
+            }
+            chest.addItem(item).values().forEach(left -> player.getInventory().addItem(left).values()
+                    .forEach(rest -> player.getWorld().dropItem(player.getLocation(), rest)));
+        }
+        servers.add(serverName);
+        plugin.getLogger().info("Coffre de l'Ender local de " + player.getName() + " versé dans son coffre synchronisé");
+        return true;
+    }
+
+    private PlayerSnapshot capture(Player player) {
+        return PlayerSnapshot.capture(player, enderServers.getOrDefault(player.getUniqueId(), Set.of(serverName)));
     }
 
     /** Attend (bloquant) que le verrou soit libre, puis le prend. @return false si toujours pris après lockWait */
@@ -150,11 +205,13 @@ public class SyncService {
         UUID uuid = player.getUniqueId();
         loading.remove(uuid); // si le chargement finit après, finishJoin rendra le verrou
         if (!synced.remove(uuid)) {
+            enderServers.remove(uuid);
             // Jamais chargé : rien à enregistrer. Ne rend le verrou que s'il est à ce serveur (deleteIfValue).
             write(() -> release(uuid));
             return;
         }
-        PlayerSnapshot snapshot = PlayerSnapshot.capture(player);
+        PlayerSnapshot snapshot = capture(player);
+        enderServers.remove(uuid);
         saving.add(uuid);
         Runnable task = () -> {
             try {
@@ -175,7 +232,7 @@ public class SyncService {
     public void autosave() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (synced.contains(player.getUniqueId())) {
-                PlayerSnapshot snapshot = PlayerSnapshot.capture(player);
+                PlayerSnapshot snapshot = capture(player);
                 UUID uuid = player.getUniqueId();
                 write(() -> save(uuid, Reason.AUTOSAVE, snapshot));
             }
@@ -192,7 +249,7 @@ public class SyncService {
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID uuid = player.getUniqueId();
             if (synced.remove(uuid)) {
-                PlayerSnapshot snapshot = PlayerSnapshot.capture(player);
+                PlayerSnapshot snapshot = capture(player);
                 writeAndWait(() -> {
                     save(uuid, Reason.SHUTDOWN, snapshot);
                     release(uuid);

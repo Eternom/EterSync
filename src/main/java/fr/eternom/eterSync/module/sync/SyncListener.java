@@ -9,6 +9,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -106,6 +108,26 @@ public class SyncListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onAttack(EntityDamageByEntityEvent event) {
         freeze(event.getDamager(), event);
+    }
+
+    /**
+     * Invulnérable pendant le chargement : un joueur qui mourrait là (lave, chute, monstre à l'arrivée) lâcherait au sol
+     * son ANCIEN inventaire local, puis recevrait le vrai : il aurait les deux (duplication).
+     */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onDamage(EntityDamageEvent event) {
+        freeze(event.getEntity(), event);
+    }
+
+    /** Filet de sécurité si une mort passe quand même (/kill, plugin) : rien ne tombe, l'inventaire local est ignoré. */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onDeath(PlayerDeathEvent event) {
+        if (sync.isLoading(event.getPlayer().getUniqueId())) {
+            event.getDrops().clear();
+            event.setKeepInventory(true);
+            event.setDroppedExp(0);
+            event.setKeepLevel(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

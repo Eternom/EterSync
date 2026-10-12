@@ -1,10 +1,10 @@
 # EterSync
 
 Synchronise l'état des joueurs entre les serveurs d'un même **groupe** : inventaire (armure et seconde main comprises),
-slot en main, expérience, vie, faim, effets, mode de jeu et **recettes débloquées** (elles ne font que s'ajouter).
-Format 2 des sauvegardes (la partie « succès » est écrite vide et ignorée à la lecture ; le format 1, sans recettes, est
-encore lu) :
-**tous les serveurs d'un groupe doivent avoir la même version**. Pas le coffre de l'Ender (plugin dédié à venir).
+slot en main, expérience, vie, faim, effets, mode de jeu, **recettes débloquées** (elles ne font que s'ajouter) et
+**coffre de l'Ender**. Format 3 des sauvegardes (la partie « succès » est écrite vide et ignorée à la lecture ; les
+formats 2, sans coffre de l'Ender, et 1, sans recettes, sont encore lus) :
+**tous les serveurs d'un groupe doivent avoir la même version**.
 Document développeur, à tenir à jour avec le code.
 
 ## Prérequis
@@ -24,10 +24,26 @@ Velocity connecte le joueur au nouveau serveur **avant** de le déconnecter de l
 3. **Départ de A** : A enregistre, **puis** libère le verrou.
 
 Garde-fous :
+- pendant le chargement, le joueur est **invulnérable**, et une mort qui passerait quand même ne lâche rien : sinon il
+  lâcherait au sol son ancien inventaire local avant de recevoir le vrai (duplication) ;
 - un joueur dont l'état n'a pas été chargé n'est **jamais enregistré** (son inventaire local écraserait le vrai) ;
 - toutes les écritures passent par **un seul fil, dans l'ordre** : une sauvegarde ancienne ne peut pas devenir « la dernière » ;
 - sauvegarde automatique (`autosave-minutes`) et à l'arrêt du serveur ;
 - si la base est injoignable, la sauvegarde est écrite dans `plugins/EterSync/failed/` (jamais perdue).
+
+## Coffre de l'Ender
+
+Synchronisé comme l'inventaire, avec une précaution : avant EterSync 1.2.0, **chaque serveur avait son propre coffre
+local**, et rien ne doit être perdu. La sauvegarde garde la liste des serveurs dont le coffre local a déjà été versé
+(`enderServers`, dans la même écriture que le coffre : jamais « versé » sans que le coffre versé soit enregistré). À
+l'arrivée (`SyncService#applyEnderChest`) :
+- serveur déjà dans la liste : le coffre synchronisé remplace le local ;
+- serveur pas encore dans la liste : le coffre local est **versé** dans le coffre synchronisé (ce qui ne rentre pas va
+  dans l'inventaire, puis au sol), le serveur est ajouté, et la sauvegarde est réécrite tout de suite (raison
+  `ENDER_MERGE`, visible dans l'historique) ;
+- sauvegarde d'avant le format 3 (coffre inconnu) : le coffre local devient la référence.
+
+Les serveurs recréés (lobbys, ressources) ont un coffre local vide : rien à verser.
 
 ## Succès désactivés (toujours)
 

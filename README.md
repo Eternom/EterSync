@@ -51,8 +51,9 @@ Chaque serveur a ses propres succès : les redonner à l'arrivée (synchronisati
 notifications et leurs sons, ce que le serveur ne peut pas cacher. Au démarrage, `module/sync/Advancements` les retire
 donc du serveur (`UnsafeValues#removeAdvancement`), sauf les recettes (`recipes/...`, livre de recettes). Les recettes se débloquent sans
 notification (`RecipeToastListener` : `PlayerRecipeDiscoverEvent#shouldShowNotification(false)`), sinon l'arrivée sur
-un serveur en affiche des dizaines. Un plugin de succès propre au réseau (en base, sans notifications de Minecraft)
-les remplacera.
+un serveur en affiche des dizaines. Un rechargement des données (`/minecraft:reload`, datapack) remet les succès : ils
+sont retirés de nouveau (`AdvancementListener`, `ServerResourcesReloadedEvent`), et l'annonce d'un succès qui passerait
+quand même est supprimée du chat. Les succès du réseau sont ceux d'EterSuccess (annoncés par lui).
 
 ## Historique (lecture seule)
 

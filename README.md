@@ -59,8 +59,26 @@ quand même est supprimée du chat. Les succès du réseau sont ceux d'EterSucce
 
 Table `etersync_snapshots` : une **ligne par sauvegarde** (jamais de mise à jour), les `history-size` plus récentes
 gardées par joueur et par groupe. `/etersync history <joueur>` (`etersync.admin`, op par défaut) : liste et aperçu de
-l'inventaire, du coffre de l'Ender (bouton en bas à droite) et de l'état, **sans restauration** : un joueur pourrait donner ses items puis demander à les récupérer
-(duplication). Les clics dans l'aperçu sont annulés, aucun item ne peut en sortir.
+l'inventaire, du coffre de l'Ender (bouton en bas à droite) et de l'état. Les clics dans l'aperçu sont annulés, aucun
+item ne peut en sortir.
+
+## Restauration (staff)
+
+Permission à part, **`etersync.restore`** (op par défaut) : un joueur pourrait donner ses items puis demander à les
+récupérer (duplication), à ne donner qu'au staff de confiance, qui vérifie avant. Bouton en bas au milieu de l'aperçu,
+puis fenêtre de confirmation. La sauvegarde choisie remplace l'inventaire, le coffre de l'Ender et l'état
+(`PlayerSnapshot#restoredOnto`), sauf : les recettes sont réunies, un coffre inconnu (sauvegarde d'avant le format 3)
+garde l'actuel, et la liste `enderServers` reste l'actuelle (sinon les coffres locaux seraient versés deux fois).
+
+Seul le serveur qui tient le verrou Redis du joueur touche à son état (`SyncService#restore`) :
+- **connecté sur ce serveur** : son menu est fermé (item au curseur rangé), son état actuel est enregistré
+  (`BEFORE_RESTORE`), puis la sauvegarde est appliquée et enregistrée (`RESTORE`), il est prévenu ;
+- **connecté nulle part** : ce serveur prend le verrou (un joueur qui arrive attend), écrit la sauvegarde restaurée
+  comme la dernière (`RESTORE`) par le fil d'écriture, puis rend le verrou : il la retrouve à sa connexion ;
+- **connecté sur un autre serveur du groupe** : refusé, le staff est renvoyé vers ce serveur.
+
+Rien n'est effacé : l'état remplacé reste dans l'historique (annuler = restaurer `BEFORE_RESTORE` ou l'ancienne
+dernière). Chaque restauration est écrite dans la console (qui, quelle sauvegarde, quel joueur).
 
 Format : `PlayerSnapshot#toBytes` (version de format en tête), items via `ItemStack.serializeItemsAsBytes` de Paper,
 mis à jour automatiquement lors des montées de version de Minecraft.

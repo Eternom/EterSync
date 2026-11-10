@@ -25,7 +25,7 @@ import java.util.Locale;
  *  · · · · · · · · ·
  *  · · · · · · · · ·
  *  · · · · · · · · ·         rangée 4 : la barre d'action
- *  ◀ · · · · · · · ▣         retour ; ▣ = coffre de l'Ender (ou retour à l'inventaire)
+ *  ◀ · · · ↺ · · · ▣         retour ; ↺ = restaurer (etersync.restore) ; ▣ = coffre de l'Ender (ou retour à l'inventaire)
  * </pre>
  * En mode coffre de l'Ender, les rangées 1 à 3 montrent ses 27 cases.
  */
@@ -34,6 +34,7 @@ public class PreviewMenu implements Menu {
     private static final int OFFHAND = 4;
     private static final int INFO = 8;
     private static final int BACK = 45;
+    private static final int RESTORE = 49;
     private static final int ENDER = 53;
 
     private final HistoryGui gui;
@@ -62,6 +63,10 @@ public class PreviewMenu implements Menu {
 
         // Contenu Paper : 0-8 barre d'action, 9-35 inventaire, 36-39 armure (bottes -> casque), 40 seconde main
         ItemStack[] items = snapshot.inventory();
+        if (viewer.hasPermission(HistoryGui.RESTORE_PERMISSION)) {
+            inventory.setItem(RESTORE, Items.item(Material.RECOVERY_COMPASS, text("preview.restore.name"),
+                    List.of(text("preview.restore.lore"), text("preview.restore.lore2"), Component.empty(), text("preview.restore.click"))));
+        }
         if (ender) {
             // Le coffre de l'Ender : 27 cases dans les rangées 1 à 3
             ItemStack[] chest = snapshot.enderChest();
@@ -101,6 +106,9 @@ public class PreviewMenu implements Menu {
         if (slot == BACK) {
             Sounds.click(player);
             gui.open(player, targetName);
+        } else if (slot == RESTORE && player.hasPermission(HistoryGui.RESTORE_PERMISSION)) {
+            Sounds.click(player);
+            gui.confirmRestore(player, targetName, entry);
         } else if (slot == ENDER && snapshot.enderChest() != null) {
             Sounds.page(player);
             player.openInventory(new PreviewMenu(gui, viewer, targetName, entry, snapshot, !ender).getInventory());

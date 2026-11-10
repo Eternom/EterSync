@@ -19,7 +19,13 @@ public class SnapshotRepository {
     private static final String TABLE = "snapshots";
 
     /** Pourquoi la sauvegarde a été faite, affiché dans l'historique. */
-    public enum Reason { FIRST, QUIT, AUTOSAVE, SHUTDOWN, ENDER_MERGE }
+    public enum Reason {
+        FIRST, QUIT, AUTOSAVE, SHUTDOWN, ENDER_MERGE,
+        /** L'état du joueur connecté juste avant une restauration : la restaurer annule la restauration. */
+        BEFORE_RESTORE,
+        /** Une ancienne sauvegarde remise par le staff. */
+        RESTORE
+    }
 
     /** Une sauvegarde, sans ses données (lues seulement si on ouvre son aperçu). */
     public record Entry(long id, UUID player, String group, String server, Reason reason, long createdAt) {
@@ -65,6 +71,13 @@ public class SnapshotRepository {
         return database.getFirst(TABLE, Map.of("id", id)).map(row -> PlayerSnapshot.fromBytes(row.getBytes("data")));
     }
 
+    /** Une sauvegarde précise, seulement si elle est bien à ce joueur et dans ce groupe. */
+    public Optional<PlayerSnapshot> load(long id, UUID player, String group) {
+        return database.query("SELECT data FROM " + database.table(TABLE)
+                        + " WHERE id = ? AND uuid = ? AND sync_group = ?", id, player, group)
+                .stream().findFirst().map(row -> PlayerSnapshot.fromBytes(row.getBytes("data")));
+    }
+
     /** Ne garde que les historySize sauvegardes les plus récentes du joueur dans ce groupe. */
     private void prune(UUID player, String group) {
         String table = database.table(TABLE);
@@ -77,6 +90,15 @@ public class SnapshotRepository {
 
     private Entry toEntry(Row row) {
         return new Entry(row.getLong("id"), row.getUUID("uuid"), row.getString("sync_group"), row.getString("server"),
-                Reason.valueOf(row.getString("reason")), row.getLong("created_at"));
+                reason(row.getString("reason")), row.getLong("created_at"));
+    }
+
+    /** Une raison inconnue (écrite par une version plus récente) ne doit pas rendre tout l'historique illisible. */
+    private static Reason reason(String name) {
+        try {
+            return Reason.valueOf(name);
+        } catch (IllegalArgumentException unknown) {
+            return Reason.AUTOSAVE;
+        }
     }
 }

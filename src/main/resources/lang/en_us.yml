@@ -29,6 +29,8 @@ history:
     autosave: "automatic save"
     shutdown: "server shutdown"
     ender_merge: "a server's ender chest merge"
+    before_restore: "just before a restore (replaced state)"
+    restore: "a staff restore"
 
 preview:
   title: "<primary><player></primary> <dark_gray>· <date>"
@@ -43,3 +45,20 @@ preview:
     gamemode: "<dark_gray>▸ <info>Game mode: <accent><value>"
     effects: "<dark_gray>▸ <info>Effects: <accent><value>"
     items: "<dark_gray>▸ <info>Item stacks: <accent><value>"
+  restore:
+    name: "<accent>Restore this save"
+    lore: "<info>Replaces the player's current inventory,"
+    lore2: "<info>ender chest and state."
+    click: "<accent>Click <dark_gray>· <info>restore (confirmation)"
+
+restore:
+  confirm:
+    title: "<primary>Restore <player>?"
+    body: "<info>The inventory, ender chest and state of <accent><player></accent> will be replaced by the save from <accent><date></accent>.\n\n<info>First check they did not give away or sell these items (duplication). The current state stays in the history: the restore can be undone."
+    button: "Restore"
+  done-online: "<success>Save from <accent><date></accent> restored for <accent><player></accent> <info>(applied right away; their previous state is in the history)."
+  done-offline: "<success>Save from <accent><date></accent> restored for <accent><player></accent> <info>(they will get it on their next login)."
+  elsewhere: "<error><accent><player></accent> is connected to <accent><server></accent>: restore from that server, or wait until they log out."
+  busy: "<error><accent><player></accent>'s data is being loaded or saved: try again in a few seconds."
+  no-permission: "<error>You don't have permission to restore a save."
+  notify: "<info>Your inventory was <accent>restored</accent> by the staff."

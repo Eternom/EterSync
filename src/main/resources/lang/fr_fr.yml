@@ -29,6 +29,8 @@ history:
     autosave: "la sauvegarde automatique"
     shutdown: "l'arrêt du serveur"
     ender_merge: "la fusion du coffre de l'Ender d'un serveur"
+    before_restore: "juste avant une restauration (état remplacé)"
+    restore: "une restauration par le staff"
 
 preview:
   title: "<primary><player></primary> <dark_gray>· <date>"
@@ -43,3 +45,20 @@ preview:
     gamemode: "<dark_gray>▸ <info>Mode de jeu : <accent><value>"
     effects: "<dark_gray>▸ <info>Effets : <accent><value>"
     items: "<dark_gray>▸ <info>Piles d'items : <accent><value>"
+  restore:
+    name: "<accent>Restaurer cette sauvegarde"
+    lore: "<info>Remplace l'inventaire, le coffre de l'Ender"
+    lore2: "<info>et l'état actuels du joueur."
+    click: "<accent>Clic <dark_gray>· <info>restaurer (confirmation)"
+
+restore:
+  confirm:
+    title: "<primary>Restaurer <player> ?"
+    body: "<info>L'inventaire, le coffre de l'Ender et l'état de <accent><player></accent> seront remplacés par la sauvegarde du <accent><date></accent>.\n\n<info>Vérifie d'abord qu'il n'a pas donné ou vendu ces items (duplication). L'état actuel reste dans l'historique : la restauration peut être annulée."
+    button: "Restaurer"
+  done-online: "<success>Sauvegarde du <accent><date></accent> restaurée pour <accent><player></accent> <info>(appliquée tout de suite ; son état d'avant est dans l'historique)."
+  done-offline: "<success>Sauvegarde du <accent><date></accent> restaurée pour <accent><player></accent> <info>(il la retrouvera à sa prochaine connexion)."
+  elsewhere: "<error><accent><player></accent> est connecté sur <accent><server></accent> : fais la restauration depuis ce serveur, ou attends qu'il se déconnecte."
+  busy: "<error>Les données de <accent><player></accent> sont en cours de chargement ou d'enregistrement : réessaie dans quelques secondes."
+  no-permission: "<error>Tu n'as pas la permission de restaurer une sauvegarde."
+  notify: "<info>Ton inventaire a été <accent>restauré</accent> par le staff."

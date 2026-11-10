@@ -18,8 +18,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Photo de tout ce qui est synchronisé : inventaire (avec armure et seconde main), slot en main,
@@ -85,6 +87,23 @@ public record PlayerSnapshot(ItemStack[] inventory, int heldSlot, GameMode gameM
 
         player.discoverRecipes(recipes.stream().map(NamespacedKey::fromString).filter(Objects::nonNull)
                 .filter(key -> !player.hasDiscoveredRecipe(key)).toList());
+    }
+
+    /**
+     * Cette (ancienne) sauvegarde, prête à être restaurée par-dessus l'état actuel : tout vient d'elle, sauf
+     * <ul>
+     *     <li>les recettes, réunies (elles ne font que s'ajouter) ;</li>
+     *     <li>le coffre de l'Ender, gardé tel quel si elle est d'avant le format 3 (coffre inconnu) ;</li>
+     *     <li>les serveurs dont le coffre local est déjà versé, toujours ceux d'aujourd'hui : remettre une ancienne liste
+     *     ferait verser une seconde fois le coffre local de ces serveurs (duplication).</li>
+     * </ul>
+     */
+    public PlayerSnapshot restoredOnto(PlayerSnapshot current) {
+        Set<String> allRecipes = new LinkedHashSet<>(current.recipes());
+        allRecipes.addAll(recipes);
+        return new PlayerSnapshot(clone(inventory), heldSlot, gameMode, health, food, saturation, exhaustion, level, exp,
+                totalExperience, effects, List.copyOf(allRecipes),
+                enderChest != null ? clone(enderChest) : current.enderChest(), current.enderServers());
     }
 
     /** Nombre d'items (piles non vides), pour l'historique. */

@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
 /**
@@ -225,6 +226,124 @@ public class SyncService {
             writeAndWait(task); // pendant l'arrêt, on attend : le serveur ne doit pas s'éteindre avant
         } else {
             write(task);
+        }
+    }
+
+    /** Issue d'une restauration, pour le message au staff. server : le serveur où est le joueur (ELSEWHERE). */
+    public record RestoreResult(Outcome outcome, String server) {
+        public enum Outcome { RESTORED_ONLINE, RESTORED_OFFLINE, ELSEWHERE, BUSY, GONE, ERROR }
+
+        static RestoreResult of(Outcome outcome) {
+            return new RestoreResult(outcome, null);
+        }
+    }
+
+    /**
+     * Remet une ancienne sauvegarde (staff, thread principal ; done est appelé sur le thread principal). Seul le serveur
+     * qui tient le verrou du joueur a le droit de toucher à son état :
+     * <ul>
+     *     <li>connecté ici : appliquée tout de suite, son état d'avant gardé dans l'historique (BEFORE_RESTORE) ;</li>
+     *     <li>connecté nulle part : ce serveur prend le verrou (le joueur qui arrive attend), écrit la sauvegarde
+     *     restaurée comme la dernière, puis rend le verrou : il la retrouve à sa connexion ;</li>
+     *     <li>connecté sur un autre serveur du groupe : refusé (ELSEWHERE), à faire depuis ce serveur-là.</li>
+     * </ul>
+     */
+    public void restore(UUID target, long snapshotId, String staff, Consumer<RestoreResult> done) {
+        Player online = Bukkit.getPlayer(target);
+        if (online != null) {
+            restoreOnline(online, snapshotId, staff, done);
+            return;
+        }
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            RestoreResult result;
+            try {
+                result = restoreOffline(target, snapshotId, staff);
+            } catch (RuntimeException e) {
+                plugin.getLogger().log(Level.SEVERE, "Restauration impossible pour " + target, e);
+                result = RestoreResult.of(RestoreResult.Outcome.ERROR);
+            }
+            RestoreResult finalResult = result;
+            Bukkit.getScheduler().runTask(plugin, () -> done.accept(finalResult));
+        });
+    }
+
+    private void restoreOnline(Player player, long snapshotId, String staff, Consumer<RestoreResult> done) {
+        UUID uuid = player.getUniqueId();
+        if (!synced.contains(uuid)) {
+            done.accept(RestoreResult.of(RestoreResult.Outcome.BUSY)); // encore en chargement
+            return;
+        }
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            Optional<PlayerSnapshot> old;
+            try {
+                old = repository.load(snapshotId, uuid, group);
+            } catch (RuntimeException e) {
+                plugin.getLogger().log(Level.SEVERE, "Restauration impossible pour " + player.getName(), e);
+                Bukkit.getScheduler().runTask(plugin, () -> done.accept(RestoreResult.of(RestoreResult.Outcome.ERROR)));
+                return;
+            }
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (old.isEmpty()) {
+                    done.accept(RestoreResult.of(RestoreResult.Outcome.GONE));
+                    return;
+                }
+                if (!player.isOnline() || !synced.contains(uuid)) {
+                    done.accept(RestoreResult.of(RestoreResult.Outcome.BUSY)); // parti entre-temps : sauvegarde de départ en cours
+                    return;
+                }
+                // Fermer d'abord : l'item tenu au curseur et la grille d'artisanat reviennent dans l'inventaire, et sont
+                // donc dans la sauvegarde « avant » au lieu de s'ajouter à l'inventaire restauré (duplication)
+                player.closeInventory();
+                PlayerSnapshot before = capture(player);
+                PlayerSnapshot restored = old.get().restoredOnto(before);
+                restored.apply(player);
+                Inventory chest = player.getEnderChest();
+                chest.setContents(Arrays.copyOf(PlayerSnapshot.clone(restored.enderChest()), chest.getSize()));
+                PlayerSnapshot after = capture(player);
+                write(() -> save(uuid, Reason.BEFORE_RESTORE, before));
+                write(() -> save(uuid, Reason.RESTORE, after));
+                plugin.getLogger().info(staff + " a restauré la sauvegarde #" + snapshotId + " de " + player.getName()
+                        + " (connecté ici, état d'avant gardé dans l'historique)");
+                messages.send(player, "restore.notify");
+                done.accept(RestoreResult.of(RestoreResult.Outcome.RESTORED_ONLINE));
+            });
+        });
+    }
+
+    /** Asynchrone : le joueur n'est pas sur ce serveur. */
+    private RestoreResult restoreOffline(UUID target, long snapshotId, String staff) {
+        if (saving.contains(target)) {
+            return RestoreResult.of(RestoreResult.Outcome.BUSY);
+        }
+        String key = lockKey(target);
+        if (!redis.setIfAbsent(key, serverName, LOCK_TTL)) {
+            Optional<String> holder = redis.get(key);
+            return holder.isPresent() && !holder.get().equals(serverName)
+                    ? new RestoreResult(RestoreResult.Outcome.ELSEWHERE, holder.get())
+                    : RestoreResult.of(RestoreResult.Outcome.BUSY);
+        }
+        try {
+            // Par le fil d'écriture, comme toute écriture : rien d'ancien ne peut passer après
+            return writer.submit(() -> {
+                Optional<PlayerSnapshot> old = repository.load(snapshotId, target, group);
+                if (old.isEmpty()) {
+                    return RestoreResult.of(RestoreResult.Outcome.GONE);
+                }
+                PlayerSnapshot current = repository.latest(target, group).orElse(old.get());
+                // Pas de copie de secours ici : en cas d'échec, rien n'a changé, le staff le voit et réessaie
+                repository.save(target, group, serverName, Reason.RESTORE, old.get().restoredOnto(current));
+                plugin.getLogger().info(staff + " a restauré la sauvegarde #" + snapshotId + " de " + target
+                        + " (hors ligne, appliquée à sa prochaine connexion)");
+                return RestoreResult.of(RestoreResult.Outcome.RESTORED_OFFLINE);
+            }).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return RestoreResult.of(RestoreResult.Outcome.ERROR);
+        } catch (ExecutionException | java.util.concurrent.RejectedExecutionException e) {
+            plugin.getLogger().log(Level.SEVERE, "Restauration impossible pour " + target, e.getCause() != null ? e.getCause() : e);
+            return RestoreResult.of(RestoreResult.Outcome.ERROR);
+        } finally {
+            release(target);
         }
     }
 

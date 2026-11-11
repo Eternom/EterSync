@@ -33,7 +33,7 @@ public class PreviewMenu implements Menu {
 
     private static final int OFFHAND = 4;
     private static final int INFO = 8;
-    private static final int BACK = 45;
+    private static final int BACK = 48; // le centre porte l'action principale ; 45 = page précédente ailleurs
     private static final int RESTORE = 49;
     private static final int ENDER = 53;
 
@@ -74,7 +74,7 @@ public class PreviewMenu implements Menu {
                 inventory.setItem(9 + i, item(chest, i));
             }
             inventory.setItem(ENDER, Items.item(Material.CHEST, text("preview.inventory"), List.of()));
-            inventory.setItem(BACK, Items.item(Material.ARROW, text("preview.back"), List.of()));
+            inventory.setItem(BACK, Items.item(Material.OAK_DOOR, text("preview.back"), List.of()));
             return;
         }
         for (int i = 0; i < 4; i++) {
@@ -98,7 +98,7 @@ public class PreviewMenu implements Menu {
         if (snapshot.enderChest() != null) {
             inventory.setItem(ENDER, Items.item(Material.ENDER_CHEST, text("preview.ender"), List.of()));
         }
-        inventory.setItem(BACK, Items.item(Material.ARROW, text("preview.back"), List.of()));
+        inventory.setItem(BACK, Items.item(Material.OAK_DOOR, text("preview.back"), List.of()));
     }
 
     @Override

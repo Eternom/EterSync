@@ -86,12 +86,18 @@ public class SyncService {
         this.lockWait = lockWait;
     }
 
+    /** Drapeau « restauré pendant qu'il était hors ligne » : le joueur est prévenu à sa connexion suivante. */
+    private static String restoredKey(UUID player) {
+        return "etersync:restored:" + player;
+    }
+
     /** Arrivée (thread principal) : fige le joueur et lance le chargement en tâche de fond. */
     public void join(Player player) {
         UUID uuid = player.getUniqueId();
         loading.add(uuid);
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Optional<PlayerSnapshot> snapshot;
+            boolean restoredOffline;
             try {
                 if (!acquire(uuid)) {
                     plugin.getLogger().warning("Verrou de synchronisation toujours pris pour " + player.getName() + " : renvoyé");
@@ -99,13 +105,23 @@ public class SyncService {
                     return;
                 }
                 snapshot = repository.latest(uuid, group);
+                restoredOffline = redis.get(restoredKey(uuid)).isPresent();
+                if (restoredOffline) {
+                    redis.delete(restoredKey(uuid));
+                }
             } catch (RuntimeException e) {
                 plugin.getLogger().log(Level.SEVERE, "Chargement impossible pour " + player.getName(), e);
                 release(uuid);
                 kick(player, "sync.error");
                 return;
             }
-            Bukkit.getScheduler().runTask(plugin, () -> finishJoin(player, snapshot));
+            boolean notify = restoredOffline;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                finishJoin(player, snapshot);
+                if (notify && player.isOnline()) {
+                    messages.send(player, "restore.notify");
+                }
+            });
         });
     }
 
@@ -332,6 +348,7 @@ public class SyncService {
                 PlayerSnapshot current = repository.latest(target, group).orElse(old.get());
                 // Pas de copie de secours ici : en cas d'échec, rien n'a changé, le staff le voit et réessaie
                 repository.save(target, group, serverName, Reason.RESTORE, old.get().restoredOnto(current));
+                redis.set(restoredKey(target), "1", java.time.Duration.ofDays(30));
                 plugin.getLogger().info(staff + " a restauré la sauvegarde #" + snapshotId + " de " + target
                         + " (hors ligne, appliquée à sa prochaine connexion)");
                 return RestoreResult.of(RestoreResult.Outcome.RESTORED_OFFLINE);
